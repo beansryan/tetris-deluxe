@@ -1,0 +1,5522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tetris Deluxe</title>
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+>
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Tetris Deluxe">
+<meta name="msapplication-TileColor" content="#000000">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-title" content="Tetris Deluxe">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA0klEQVR42u1XwQ3CMAw8R52GGWAbmAK+TFG2gR9/1gkPZEisAmlkx41UvyJLrS93ZysmABGOMchEjPZ4iOh9Dq2LyzrEEmTJBKFpcaIXgFbFp0CEb9q4eMAj3AEMpVpp0t4PAxyP8+e8Odblt9gDAG64LIuBWQDuJ5185o10EEmjaJpwR4dMAv73sk3IjLCBOK5x/HtT1S6Y2x3qAGTrAGPFN4ajuMTtJhIw7bX09zOKS7ujSwZ+TsIWz7L1RbQCcN+MgnS/NYjJzag1A+ml3TejJ9c8VkP8huGmAAAAAElFTkSuQmCC">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+
+
+<style>
+/* ==========================================================================
+   GLOBAL RESET / THEME
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #000000;
+  --fg: #ffffff;
+  --muted: #aaaaaa;
+  --grid: #111111;
+  --panel-bg: #000000;
+  --danger: #ff5555;
+  --good: #55ff88;
+  --warning: #ffcc55;
+  --app-height: 100dvh;
+  --mobile-controls-height: 112px;
+  --mobile-button-size: 48px;
+  --mobile-button-font: 18px;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Courier New", monospace;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:
+    env(safe-area-inset-top)
+    env(safe-area-inset-right)
+    env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+
+body.large-ui {
+  font-size: 18px;
+}
+
+/* ==========================================================================
+   LAYOUT
+   ========================================================================== */
+
+#wrap {
+  display: grid;
+  grid-template-columns: 210px 320px 210px;
+  gap: 16px;
+  align-items: start;
+}
+
+.panel {
+  border: 4px solid var(--fg);
+  padding: 10px;
+  background: var(--panel-bg);
+}
+
+.label {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.value {
+  font-size: 21px;
+  margin-bottom: 7px;
+  min-height: 25px;
+}
+
+canvas {
+  background: #000000;
+  image-rendering: pixelated;
+}
+
+#board {
+  width: 320px;
+  height: 640px;
+  max-width: calc(100vw - 20px);
+  max-height: calc(100dvh - 120px);
+  border: 4px solid var(--fg);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.small {
+  border: 2px solid var(--fg);
+  margin: 6px 0 12px;
+}
+
+/* ==========================================================================
+   OVERLAY / MENU
+   ========================================================================== */
+
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 20;
+  padding:
+    calc(14px + env(safe-area-inset-top))
+    calc(14px + env(safe-area-inset-right))
+    calc(14px + env(safe-area-inset-bottom))
+    calc(14px + env(safe-area-inset-left));
+}
+
+#overlay.dim {
+  background: rgba(0, 0, 0, 0.72);
+}
+
+#box {
+  border: 4px solid var(--fg);
+  padding: 22px;
+  max-width: 980px;
+  max-height: 92vh;
+  max-height: 92dvh;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #000000;
+}
+
+h1 {
+  font-size: 42px;
+  letter-spacing: 4px;
+  margin: 0 0 12px;
+}
+
+h2 {
+  margin: 16px 0 8px;
+  font-size: 24px;
+}
+
+p {
+  line-height: 1.45;
+}
+
+button,
+select,
+input,
+textarea {
+  background: #000000;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  font-family: inherit;
+  font-size: 16px;
+  padding: 6px;
+  margin: 3px;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button:hover,
+select:hover,
+button:focus,
+select:focus,
+input:focus,
+textarea:focus {
+  background: #ffffff;
+  color: #000000;
+  outline: 2px solid #777777;
+  outline-offset: 2px;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 8px 14px;
+  text-align: left;
+}
+
+.settings-grid label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.settings-grid input[type="checkbox"] {
+  width: auto;
+}
+
+.settings-grid input[type="range"] {
+  width: 120px;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.good {
+  color: var(--good);
+}
+
+.warning {
+  color: var(--warning);
+}
+
+.records-table {
+  margin: 12px auto;
+  border-collapse: collapse;
+}
+
+.records-table th,
+.records-table td {
+  border: 1px solid #ffffff;
+  padding: 6px 10px;
+  text-align: right;
+}
+
+.records-table th:first-child,
+.records-table td:first-child {
+  text-align: left;
+}
+
+pre {
+  font-family: "Courier New", monospace;
+}
+
+/* ==========================================================================
+   MOBILE CONTROLS
+   ========================================================================== */
+
+#mobile,
+#mobileMenu {
+  display: none;
+}
+
+#mobile {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  pointer-events: none;
+}
+
+.mobile-zone {
+  display: grid;
+  align-items: center;
+  gap: 7px;
+  pointer-events: auto;
+}
+
+.mobile-zone-left {
+  grid-template-columns: repeat(3, var(--mobile-button-size));
+  align-self: end;
+}
+
+.mobile-zone-right {
+  grid-template-columns: repeat(2, var(--mobile-button-size));
+  grid-template-rows: repeat(2, var(--mobile-button-size));
+  align-self: end;
+}
+
+#mobile button,
+#mobileMenu {
+  width: var(--mobile-button-size);
+  height: var(--mobile-button-size);
+  min-width: var(--mobile-button-size);
+  border-width: 2px;
+  font-size: var(--mobile-button-font);
+  margin: 0;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#mobile button[data-act="hd"] {
+  border-width: 3px;
+  font-weight: bold;
+}
+
+#mobileMenu {
+  position: fixed;
+  top: calc(8px + env(safe-area-inset-top));
+  right: calc(8px + env(safe-area-inset-right));
+  z-index: 12;
+  background: rgba(0, 0, 0, 0.92);
+}
+
+/* Mobile-only compact HUD. Hidden on desktop to preserve the original 3-column layout. */
+#mobileInfo {
+  display: none;
+}
+
+.mobile-mini-canvas {
+  background: #000000;
+  image-rendering: pixelated;
+}
+
+.mobile-controls-compact {
+  --mobile-controls-height: 94px;
+  --mobile-button-size: 38px;
+  --mobile-button-font: 15px;
+}
+
+.mobile-controls-normal {
+  --mobile-controls-height: 112px;
+  --mobile-button-size: 48px;
+  --mobile-button-font: 18px;
+}
+
+.mobile-controls-large {
+  --mobile-controls-height: 136px;
+  --mobile-button-size: 58px;
+  --mobile-button-font: 22px;
+}
+
+/* ==========================================================================
+   RESPONSIVE / MOBILE LAYOUT
+   ========================================================================== */
+
+@media (max-width: 880px), (max-width: 1180px) and (pointer: coarse) {
+  html,
+  body {
+    overflow: hidden;
+    position: fixed;
+    inset: 0;
+  }
+
+  body {
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0;
+  }
+
+  #wrap {
+    width: 100vw;
+    height: 100vh;
+    height: var(--app-height, 100dvh);
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    justify-items: center;
+    align-items: start;
+    gap: 4px;
+    padding:
+      calc(4px + env(safe-area-inset-top))
+      6px
+      calc(var(--mobile-controls-height) + env(safe-area-inset-bottom) + 5px)
+      6px;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  #wrap .panel {
+    width: min(320px, calc(100vw - 16px));
+  }
+
+  #wrap .panel:first-child {
+    order: 1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0 8px;
+    padding: 6px 8px;
+  }
+
+  #wrap .panel:first-child > div:nth-child(6),
+  #wrap .panel:first-child > div:nth-child(7) {
+    display: none;
+  }
+
+  #board {
+    order: 2;
+    width: min(320px, calc(100vw - 16px));
+    height: auto;
+    aspect-ratio: 1 / 2;
+    /* Keep the board as large as possible on tall phones like Galaxy S26 Ultra. */
+    max-height: calc(var(--app-height, 100dvh) - 142px - var(--mobile-controls-height) - env(safe-area-inset-bottom));
+  }
+
+  #wrap .panel:last-child {
+    display: none;
+  }
+
+  #mobileInfo {
+    order: 3;
+    width: min(420px, calc(100vw - 12px));
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    align-items: center;
+    gap: 2px 4px;
+    border: 2px solid var(--fg);
+    padding: 3px 4px;
+    background: rgba(0, 0, 0, 0.96);
+  }
+
+  #mobileInfo .mobile-stat,
+  #mobileInfo .mobile-mini {
+    min-width: 0;
+  }
+
+  #mobileInfo .mobile-mini-wide {
+    grid-column: span 2;
+  }
+
+  #mobileInfo .label {
+    font-size: 8px;
+    margin: 0 0 1px;
+    text-align: center;
+  }
+
+  #mobileInfo .value {
+    font-size: 11px;
+    min-height: 13px;
+    margin: 0;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+  }
+
+  .mobile-mini-canvas {
+    display: block;
+    width: 52px;
+    height: 26px;
+    margin: 0 auto;
+  }
+
+  .label {
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
+  .value {
+    font-size: 15px;
+    min-height: 17px;
+    margin-bottom: 0;
+  }
+
+  #mobile {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+    justify-content: space-between;
+    background: rgba(0, 0, 0, 0.96);
+    padding: 8px max(10px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-right));
+    border-top: 2px solid rgba(255, 255, 255, 0.22);
+  }
+
+  #mobileMenu {
+    display: block;
+  }
+
+  #box {
+    width: min(94vw, 980px);
+    max-height: 88vh;
+    max-height: 88dvh;
+    padding: 18px;
+  }
+
+  h1 {
+    font-size: 30px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 880px) and (min-height: 840px) and (orientation: portrait) {
+  :root {
+    --mobile-controls-height: 108px;
+    --mobile-button-size: 46px;
+    --mobile-button-font: 17px;
+  }
+
+  #board {
+    max-height: calc(var(--app-height, 100dvh) - 132px - var(--mobile-controls-height) - env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 380px), (max-height: 720px) {
+  :root {
+    --mobile-controls-height: 92px;
+    --mobile-button-size: 36px;
+    --mobile-button-font: 14px;
+  }
+
+  #mobile {
+    padding-top: 6px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
+  }
+
+
+  #board {
+    max-height: calc(var(--app-height, 100dvh) - 136px - var(--mobile-controls-height) - env(safe-area-inset-bottom));
+  }
+
+  #mobileInfo {
+    width: min(360px, calc(100vw - 12px));
+    padding: 2px 3px;
+  }
+
+  .mobile-mini-canvas {
+    width: 46px;
+    height: 24px;
+  }
+
+  #mobileInfo .value {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 880px) and (display-mode: standalone), (max-width: 1180px) and (pointer: coarse) and (display-mode: standalone) {
+  #overlay {
+    padding-top: calc(20px + env(safe-area-inset-top));
+  }
+}
+
+@media (max-width: 880px) and (orientation: landscape), (max-width: 1180px) and (pointer: coarse) and (orientation: landscape) {
+  :root {
+    --mobile-controls-height: 68px;
+    --mobile-button-size: 44px;
+    --mobile-button-font: 16px;
+  }
+
+  #wrap {
+    grid-template-columns: minmax(120px, 0.54fr) minmax(160px, 1fr) minmax(130px, 0.45fr);
+    grid-template-rows: 1fr;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #wrap .panel:first-child {
+    order: 1;
+    grid-template-columns: 1fr 1fr;
+    width: min(250px, 35vw);
+  }
+
+  #board {
+    order: 2;
+    width: auto;
+    height: min(calc(var(--app-height, 100dvh) - var(--mobile-controls-height) - 18px), calc(100vw - 370px));
+    max-height: none;
+  }
+
+  #mobileInfo {
+    order: 3;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: min(190px, 28vw);
+    align-self: center;
+  }
+
+  #mobileInfo .mobile-mini-wide {
+    grid-column: span 1;
+  }
+
+  #mobile {
+    grid-template-columns: 1fr 1fr;
+    padding-top: 6px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
+  }
+
+  .mobile-zone-left {
+    grid-template-columns: repeat(3, var(--mobile-button-size));
+  }
+
+  .mobile-zone-right {
+    grid-template-columns: repeat(4, var(--mobile-button-size));
+    grid-template-rows: 1fr;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="overlay">
+  <div id="box"></div>
+</div>
+
+<div id="wrap">
+
+  <div class="panel">
+    <div>
+      <div class="label">SCORE</div>
+      <div id="score" class="value">000000</div>
+    </div>
+
+    <div>
+      <div class="label">BEST</div>
+      <div id="best" class="value">000000</div>
+    </div>
+
+    <div>
+      <div class="label">LEVEL</div>
+      <div id="level" class="value">01</div>
+    </div>
+
+    <div>
+      <div class="label">LINES</div>
+      <div id="lines" class="value">000</div>
+    </div>
+
+    <div>
+      <div class="label">TIME</div>
+      <div id="time" class="value">00:00</div>
+    </div>
+
+    <div>
+      <div class="label">MODE</div>
+      <div id="modeName" class="value">MODERN</div>
+    </div>
+
+    <div style="grid-column: 1 / -1;">
+      <div class="label">NOTICE</div>
+      <div id="notice" class="value">READY</div>
+    </div>
+  </div>
+
+  <canvas id="board" width="320" height="640" aria-label="Tetris board"></canvas>
+
+  <div id="mobileInfo" aria-label="Mobile game information">
+    <div class="mobile-stat">
+      <div class="label">SCORE</div>
+      <div id="mobileScore" class="value">000000</div>
+    </div>
+
+    <div class="mobile-stat">
+      <div class="label">LEVEL</div>
+      <div id="mobileLevel" class="value">01</div>
+    </div>
+
+    <div class="mobile-stat">
+      <div class="label">LINES</div>
+      <div id="mobileLines" class="value">000</div>
+    </div>
+
+    <div class="mobile-stat">
+      <div class="label">TIME</div>
+      <div id="mobileTime" class="value">00:00</div>
+    </div>
+
+    <div class="mobile-mini mobile-mini-wide">
+      <div class="label">HOLD</div>
+      <canvas id="mobileHold" class="mobile-mini-canvas" width="120" height="76"></canvas>
+    </div>
+
+    <div class="mobile-mini mobile-mini-wide">
+      <div class="label">NEXT</div>
+      <canvas id="mobileNext" class="mobile-mini-canvas" width="120" height="76"></canvas>
+    </div>
+
+    <div class="mobile-stat">
+      <div class="label">COMBO</div>
+      <div id="mobileCombo" class="value">0</div>
+    </div>
+
+    <div class="mobile-stat">
+      <div class="label">B2B</div>
+      <div id="mobileB2b" class="value">NO</div>
+    </div>
+
+    <div class="mobile-stat">
+      <div class="label">GARBAGE</div>
+      <div id="mobileGarbage" class="value">-</div>
+    </div>
+
+    <div class="mobile-stat">
+      <div class="label">MODE</div>
+      <div id="mobileMode" class="value">MODERN</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="label">HOLD</div>
+    <canvas id="hold" class="small" width="120" height="110"></canvas>
+
+    <div class="label">NEXT</div>
+    <canvas id="next" class="small" width="120" height="350"></canvas>
+
+    <div class="label">COMBO</div>
+    <div id="combo" class="value">0</div>
+
+    <div class="label">B2B</div>
+    <div id="b2b" class="value">NO</div>
+
+    <div class="label">PPS</div>
+    <div id="pps" class="value">0.00</div>
+
+    <div class="label">KPP</div>
+    <div id="kpp" class="value">0.00</div>
+
+    <div class="label">GARBAGE</div>
+    <div id="garbage" class="value">-</div>
+  </div>
+
+</div>
+
+<button id="mobileMenu" aria-label="Pause and menu">☰</button>
+
+<div id="mobile" aria-label="Mobile controls">
+  <div class="mobile-zone mobile-zone-left" aria-label="Movement controls">
+    <button data-act="l" aria-label="Move left">←</button>
+    <button data-act="d" aria-label="Soft drop">↓</button>
+    <button data-act="r" aria-label="Move right">→</button>
+  </div>
+
+  <div class="mobile-zone mobile-zone-right" aria-label="Action controls">
+    <button data-act="ccw" aria-label="Rotate counter-clockwise">↺</button>
+    <button data-act="cw" aria-label="Rotate clockwise">↻</button>
+    <button data-act="h" aria-label="Hold">H</button>
+    <button data-act="hd" aria-label="Hard drop">⤓</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ==========================================================================
+     MOBILE / IOS APP SHELL HELPERS
+     ========================================================================== */
+
+  function updateAppHeight() {
+    const height = window.visualViewport
+      ? window.visualViewport.height
+      : window.innerHeight;
+
+    document.documentElement.style.setProperty(
+      "--app-height",
+      height + "px"
+    );
+  }
+
+  updateAppHeight();
+  window.addEventListener("resize", updateAppHeight);
+  window.addEventListener("orientationchange", () => {
+    setTimeout(updateAppHeight, 80);
+    setTimeout(updateAppHeight, 250);
+    setTimeout(updateAppHeight, 600);
+  });
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", updateAppHeight);
+    window.visualViewport.addEventListener("scroll", updateAppHeight);
+  }
+
+  const isStandaloneApp =
+    window.navigator.standalone === true ||
+    (typeof window.matchMedia === "function" &&
+      window.matchMedia("(display-mode: standalone)").matches);
+
+  if (isStandaloneApp) {
+    document.documentElement.classList.add("standalone-app");
+  }
+
+  let lastTouchEndTime = 0;
+
+  document.addEventListener(
+    "touchend",
+    event => {
+      const now = Date.now();
+
+      if (now - lastTouchEndTime <= 300) {
+        event.preventDefault();
+      }
+
+      lastTouchEndTime = now;
+    },
+    { passive: false }
+  );
+
+
+  /* ==========================================================================
+     CANVAS / DOM SETUP
+     ========================================================================== */
+
+  const BOARD_WIDTH = 10;
+  const BOARD_HEIGHT = 20;
+  const CELL_SIZE = 32;
+
+  const BOARD_PIXEL_WIDTH = BOARD_WIDTH * CELL_SIZE;
+  const BOARD_PIXEL_HEIGHT = BOARD_HEIGHT * CELL_SIZE;
+
+  const LINE_CLEAR_ANIMATION_DURATION = 180;
+
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  const boardCanvas = $("board");
+  const boardCtx = boardCanvas.getContext("2d");
+
+  const holdCanvas = $("hold");
+  const holdCtx = holdCanvas.getContext("2d");
+
+  const nextCanvas = $("next");
+  const nextCtx = nextCanvas.getContext("2d");
+
+  const mobileHoldCanvas = $("mobileHold");
+  const mobileNextCanvas = $("mobileNext");
+  const mobileHoldCtx = mobileHoldCanvas
+    ? mobileHoldCanvas.getContext("2d")
+    : null;
+  const mobileNextCtx = mobileNextCanvas
+    ? mobileNextCanvas.getContext("2d")
+    : null;
+
+  boardCtx.imageSmoothingEnabled = false;
+  holdCtx.imageSmoothingEnabled = false;
+  nextCtx.imageSmoothingEnabled = false;
+
+  if (mobileHoldCtx) {
+    mobileHoldCtx.imageSmoothingEnabled = false;
+  }
+
+  if (mobileNextCtx) {
+    mobileNextCtx.imageSmoothingEnabled = false;
+  }
+
+  /* ==========================================================================
+     PIECES / SHAPES / COLORS
+     ========================================================================== */
+
+  const PIECE_TYPES = ["I", "O", "T", "S", "Z", "J", "L"];
+
+  const SHAPES = {
+    I: [
+      [0, 0, 0, 0],
+      [1, 1, 1, 1],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0]
+    ],
+
+    O: [
+      [1, 1],
+      [1, 1]
+    ],
+
+    T: [
+      [0, 1, 0],
+      [1, 1, 1],
+      [0, 0, 0]
+    ],
+
+    S: [
+      [0, 1, 1],
+      [1, 1, 0],
+      [0, 0, 0]
+    ],
+
+    Z: [
+      [1, 1, 0],
+      [0, 1, 1],
+      [0, 0, 0]
+    ],
+
+    J: [
+      [1, 0, 0],
+      [1, 1, 1],
+      [0, 0, 0]
+    ],
+
+    L: [
+      [0, 0, 1],
+      [1, 1, 1],
+      [0, 0, 0]
+    ]
+  };
+
+  const PALETTES = {
+    default: {
+      I: "#00ffff",
+      O: "#ffff00",
+      T: "#a000ff",
+      S: "#00ff00",
+      Z: "#ff0000",
+      J: "#003cff",
+      L: "#ff8c00",
+      G: "#777777"
+    },
+
+    colorblind: {
+      I: "#56b4e9",
+      O: "#f0e442",
+      T: "#cc79a7",
+      S: "#009e73",
+      Z: "#d55e00",
+      J: "#0072b2",
+      L: "#e69f00",
+      G: "#777777"
+    },
+
+    contrast: {
+      I: "#7df9ff",
+      O: "#ffff66",
+      T: "#ff66ff",
+      S: "#66ff66",
+      Z: "#ff6666",
+      J: "#6699ff",
+      L: "#ffb266",
+      G: "#aaaaaa"
+    }
+  };
+
+  /* ==========================================================================
+     ROTATION KICKS
+     ========================================================================== */
+
+  const NORMAL_KICKS = {
+    "0>1": [[0, 0], [-1, 0], [-1, 1], [0, -2], [-1, -2]],
+    "1>0": [[0, 0], [1, 0], [1, -1], [0, 2], [1, 2]],
+
+    "1>2": [[0, 0], [1, 0], [1, -1], [0, 2], [1, 2]],
+    "2>1": [[0, 0], [-1, 0], [-1, 1], [0, -2], [-1, -2]],
+
+    "2>3": [[0, 0], [1, 0], [1, 1], [0, -2], [1, -2]],
+    "3>2": [[0, 0], [-1, 0], [-1, -1], [0, 2], [-1, 2]],
+
+    "3>0": [[0, 0], [-1, 0], [-1, -1], [0, 2], [-1, 2]],
+    "0>3": [[0, 0], [1, 0], [1, 1], [0, -2], [1, -2]]
+  };
+
+  const I_KICKS = {
+    "0>1": [[0, 0], [-2, 0], [1, 0], [-2, -1], [1, 2]],
+    "1>0": [[0, 0], [2, 0], [-1, 0], [2, 1], [-1, -2]],
+
+    "1>2": [[0, 0], [-1, 0], [2, 0], [-1, 2], [2, -1]],
+    "2>1": [[0, 0], [1, 0], [-2, 0], [1, -2], [-2, 1]],
+
+    "2>3": [[0, 0], [2, 0], [-1, 0], [2, 1], [-1, -2]],
+    "3>2": [[0, 0], [-2, 0], [1, 0], [-2, -1], [1, 2]],
+
+    "3>0": [[0, 0], [1, 0], [-2, 0], [1, -2], [-2, 1]],
+    "0>3": [[0, 0], [-1, 0], [2, 0], [-1, -2], [2, 1]]
+  };
+
+  /* ==========================================================================
+     GRAVITY
+     ========================================================================== */
+
+  const GRAVITY_INTERVALS = [
+    1000,
+    900,
+    800,
+    700,
+    600,
+    500,
+    400,
+    320,
+    250,
+    200,
+    160,
+    130,
+    100,
+    80,
+    65
+  ];
+
+  /* ==========================================================================
+     LOCAL STORAGE HELPERS
+     ========================================================================== */
+
+  function loadJson(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+
+      if (raw === null) {
+        return fallback;
+      }
+
+      const parsed = JSON.parse(raw);
+
+      if (parsed === null || parsed === undefined) {
+        return fallback;
+      }
+
+      return parsed;
+    } catch (error) {
+      return fallback;
+    }
+  }
+
+  function saveJson(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  /* ==========================================================================
+     CONFIG / DEFAULTS
+     ========================================================================== */
+
+  const DEFAULT_CONFIG = {
+    das: 150,
+    arr: 42,
+
+    /*
+      Base lock delay is the player-facing normal lock delay.
+      Effective lock delay can optionally scale upward with level so high
+      start levels do not feel like pieces lock unfairly fast.
+    */
+    lockDelay: 650,
+    lockDelayScaleWithLevel: true,
+    lockDelayLevelBonus: 25,
+    minimumLockDelay: 500,
+    maximumLockDelay: 1100,
+    lockResetLimit: 20,
+    lockDelayTuningVersion: 2,
+
+    are: 70,
+    inputBuffer: 110,
+    softDropRepeat: 38,
+
+    startLevel: 1,
+
+    restartConfirm: true,
+
+    palette: "default",
+    largeUi: false,
+    mobileControlSize: "normal",
+    dangerRowThreshold: 5,
+    garbageMeterEnabled: true,
+
+    resumeCountdownStyle: "notice",
+
+    classicAuthentic: false,
+    classicDisableHardDrop: true,
+    classicDisableHold: true,
+    classicDisableGhost: true,
+    classicLimitedKicks: true,
+
+    zenGravityEnabled: true,
+    zenInfiniteLock: false,
+    zenUndoLimit: 30,
+
+    musicVolume: 0.35,
+    sfxVolume: 0.65,
+
+    debugMode: false,
+
+    garbagePreset: "normal",
+
+    garbageBaseInterval: 7200,
+    garbageMinimumInterval: 2600,
+    garbageLevelSpeedup: 420,
+    garbageLinesPerAttack: 1,
+    garbageApplyOnSpawn: true,
+    garbageMaxPending: 12
+  };
+
+  const GARBAGE_PRESETS = {
+    easy: {
+      garbageBaseInterval: 9500,
+      garbageMinimumInterval: 4200,
+      garbageLevelSpeedup: 280,
+      garbageLinesPerAttack: 1,
+      garbageApplyOnSpawn: true,
+      garbageMaxPending: 8
+    },
+
+    normal: {
+      garbageBaseInterval: 7200,
+      garbageMinimumInterval: 2600,
+      garbageLevelSpeedup: 420,
+      garbageLinesPerAttack: 1,
+      garbageApplyOnSpawn: true,
+      garbageMaxPending: 12
+    },
+
+    hard: {
+      garbageBaseInterval: 5200,
+      garbageMinimumInterval: 1600,
+      garbageLevelSpeedup: 560,
+      garbageLinesPerAttack: 2,
+      garbageApplyOnSpawn: true,
+      garbageMaxPending: 18
+    }
+  };
+
+  const DEFAULT_KEYS = {
+    left: "ArrowLeft",
+    right: "ArrowRight",
+    softDrop: "ArrowDown",
+    rotateCw: "ArrowUp",
+    rotateCwAlt: "x",
+    rotateCcw: "z",
+    hardDrop: " ",
+    hardDropAlt: "Enter",
+    hold: "c",
+    pause: "p",
+    restart: "r",
+    music: "m",
+    sfx: "n",
+    ghost: "g",
+    zenClear: "v"
+  };
+
+  let config = Object.assign(
+    {},
+    DEFAULT_CONFIG,
+    loadJson("tetrisDeluxeConfig", {})
+  );
+
+  if (!config.lockDelayTuningVersion || config.lockDelayTuningVersion < 2) {
+    config.lockDelay = Math.max(Number(config.lockDelay) || 0, DEFAULT_CONFIG.lockDelay);
+    config.lockDelayLevelBonus = Math.max(Number(config.lockDelayLevelBonus) || 0, DEFAULT_CONFIG.lockDelayLevelBonus);
+    config.minimumLockDelay = Math.max(Number(config.minimumLockDelay) || 0, DEFAULT_CONFIG.minimumLockDelay);
+    config.maximumLockDelay = Math.max(Number(config.maximumLockDelay) || 0, DEFAULT_CONFIG.maximumLockDelay);
+    config.lockResetLimit = DEFAULT_CONFIG.lockResetLimit;
+    config.lockDelayTuningVersion = DEFAULT_CONFIG.lockDelayTuningVersion;
+    saveJson("tetrisDeluxeConfig", config);
+  }
+
+  let keys = Object.assign(
+    {},
+    DEFAULT_KEYS,
+    loadJson("tetrisDeluxeKeys", {})
+  );
+
+  let records = loadJson("tetrisDeluxeRecords", {});
+
+  let mode = localStorage.getItem("tetrisDeluxeMode") || "modern";
+
+  let musicEnabled = localStorage.getItem("tetrisMusic") !== "0";
+  let sfxEnabled = localStorage.getItem("tetrisSfx") !== "0";
+  let ghostEnabled = localStorage.getItem("tetrisGhost") !== "0";
+
+  /* ==========================================================================
+     GAME STATE
+     ========================================================================== */
+
+  let board = createEmptyBoard();
+
+  let activePiece = null;
+  let holdPieceType = null;
+  let canHold = true;
+  let queue = [];
+
+  let isClassic = false;
+
+  let score = 0;
+  let lines = 0;
+  let level = 1;
+  let combo = -1;
+  let backToBack = false;
+
+  let piecesPlaced = 0;
+  let tetrises = 0;
+  let perfectClears = 0;
+  let maxCombo = 0;
+  let inputCount = 0;
+
+  let started = false;
+  let paused = false;
+  let gameOver = false;
+  let confirmingRestart = false;
+
+  let clearingRows = [];
+  let clearAnimationTimer = 0;
+
+  let lastFrameTime = 0;
+  let gravityTimer = 0;
+  let lockTimer = 0;
+  let lockResets = 0;
+
+  let spawnPending = false;
+  let spawnTimer = 0;
+
+  let startTime = 0;
+  let elapsedTime = 0;
+  let pauseStartedAt = 0;
+
+  let resumeCountdownTimer = 0;
+
+  let moveLeftHeld = false;
+  let moveRightHeld = false;
+  let softDropHeld = false;
+
+  let leftDasTimer = 0;
+  let rightDasTimer = 0;
+  let softDropHoldTimer = 0;
+
+  let leftArrTimer = 0;
+  let rightArrTimer = 0;
+  let softDropRepeatTimer = 0;
+
+  let lastActionWasRotation = false;
+  let bufferedAction = null;
+
+  let messageText = "READY";
+  let messageTimer = 0;
+
+  let garbagePending = 0;
+  let garbageChargeTimer = 0;
+  let lastGarbageHole = 4;
+  let garbageAttacksSurvived = 0;
+
+  let zenHistory = [];
+  let lastGameSummary = "";
+
+  /* ==========================================================================
+     AUDIO STATE
+     ========================================================================== */
+
+  let audioContext = null;
+  let musicTimer = null;
+  let musicGeneration = 0;
+  let activeOscillators = [];
+
+  /* ==========================================================================
+     FORMATTERS / GENERAL HELPERS / RECORD KEYS
+     ========================================================================== */
+
+  function padNumber(value, length) {
+    return String(Math.floor(value)).padStart(length, "0");
+  }
+
+  function formatTime(milliseconds) {
+    const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    return padNumber(minutes, 2) + ":" + padNumber(seconds, 2);
+  }
+
+  function clampNumber(value, minimum, maximum) {
+    return Math.max(minimum, Math.min(maximum, value));
+  }
+
+  function getActivePalette() {
+    return PALETTES[config.palette] || PALETTES.default;
+  }
+
+  function getRecordKeyForCurrentMode() {
+    if (mode === "garbage") {
+      return "garbage_" + (config.garbagePreset || "normal");
+    }
+
+    return mode;
+  }
+
+  function getRecordForCurrentMode() {
+    return records[getRecordKeyForCurrentMode()] || {};
+  }
+
+  function getBestDisplayForCurrentMode() {
+    const record = getRecordForCurrentMode();
+
+    if (mode === "sprint") {
+      return record.bestTime ? formatTime(record.bestTime) : "--:--";
+    }
+
+    if (mode === "garbage") {
+      return record.bestSurvivalTime
+        ? formatTime(record.bestSurvivalTime)
+        : "--:--";
+    }
+
+    return padNumber(record.bestScore || 0, 6);
+  }
+
+  function getBaseLevelForCurrentMode() {
+    if (mode === "sprint" || mode === "zen") {
+      return 1;
+    }
+
+    return clampNumber(
+      Number(config.startLevel) || 1,
+      1,
+      GRAVITY_INTERVALS.length
+    );
+  }
+
+  function getLevelFromLines() {
+    return getBaseLevelForCurrentMode() + Math.floor(lines / 10);
+  }
+
+  function makeMeter(value, maximum, width = 8) {
+    const safeMaximum = Math.max(1, maximum);
+    const ratio = clampNumber(value / safeMaximum, 0, 1);
+    const filled = Math.round(ratio * width);
+    const empty = width - filled;
+
+    return "▰".repeat(filled) + "▱".repeat(empty);
+  }
+
+  function getModeDisplayName(modeName) {
+    if (modeName === "modern") {
+      return "MODERN MARATHON";
+    }
+
+    if (modeName === "classic") {
+      return "CLASSIC RANDOM";
+    }
+
+    if (modeName === "sprint") {
+      return "SPRINT 40L";
+    }
+
+    if (modeName === "ultra") {
+      return "ULTRA 2:00";
+    }
+
+    if (modeName === "zen") {
+      return "ZEN PRACTICE";
+    }
+
+    if (modeName === "garbage") {
+      return "GARBAGE SURVIVAL";
+    }
+
+    return String(modeName).toUpperCase();
+  }
+
+  /* ==========================================================================
+     LOCK DELAY SCALING
+     ========================================================================== */
+
+  function getEffectiveLockDelay() {
+    /*
+      This is the important high-start-level fix.
+
+      Gravity can get very fast when you manually start at higher levels.
+      Without extra lock time, the piece can feel like it locks too quickly.
+
+      This keeps gravity fast, but gives you a fairer grounded adjustment
+      window as level increases.
+    */
+    if (!config.lockDelayScaleWithLevel) {
+      return config.lockDelay;
+    }
+
+    const levelBonus =
+      Math.max(0, level - 1) * config.lockDelayLevelBonus;
+
+    return clampNumber(
+      config.lockDelay + levelBonus,
+      config.minimumLockDelay,
+      config.maximumLockDelay
+    );
+  }
+
+  /* ==========================================================================
+     BOARD / PIECE CREATION
+     ========================================================================== */
+
+  function createEmptyBoard() {
+    return Array.from(
+      { length: BOARD_HEIGHT },
+      () => Array(BOARD_WIDTH).fill(null)
+    );
+  }
+
+  function cloneShape(shape) {
+    return shape.map(row => row.slice());
+  }
+
+  function createPiece(type) {
+    return {
+      type,
+      shape: cloneShape(SHAPES[type]),
+      x: type === "O" ? 4 : 3,
+      y: -1,
+      rotation: 0
+    };
+  }
+
+  function clonePieceObject(piece) {
+    if (!piece) {
+      return null;
+    }
+
+    return {
+      type: piece.type,
+      shape: cloneShape(piece.shape),
+      x: piece.x,
+      y: piece.y,
+      rotation: piece.rotation
+    };
+  }
+
+  function shuffleArray(array) {
+    const copy = array.slice();
+
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const temp = copy[i];
+
+      copy[i] = copy[j];
+      copy[j] = temp;
+    }
+
+    return copy;
+  }
+
+  function refillSevenBag() {
+    queue.push(...shuffleArray(PIECE_TYPES));
+  }
+
+  function getClassicRandomPieceType() {
+    let type = PIECE_TYPES[Math.floor(Math.random() * PIECE_TYPES.length)];
+
+    if (
+      activePiece &&
+      type === activePiece.type &&
+      Math.random() < 0.72
+    ) {
+      type = PIECE_TYPES[Math.floor(Math.random() * PIECE_TYPES.length)];
+    }
+
+    return type;
+  }
+
+  function getNextPieceType() {
+    if (isClassic) {
+      return getClassicRandomPieceType();
+    }
+
+    if (queue.length < 7) {
+      refillSevenBag();
+    }
+
+    return queue.shift();
+  }
+
+  /* ==========================================================================
+     GARBAGE PRESETS / PER-MODE DEFAULTS
+     ========================================================================== */
+
+  function applyGarbagePreset(presetName) {
+    const preset = GARBAGE_PRESETS[presetName];
+
+    if (!preset) {
+      return;
+    }
+
+    config.garbageBaseInterval = preset.garbageBaseInterval;
+    config.garbageMinimumInterval = preset.garbageMinimumInterval;
+    config.garbageLevelSpeedup = preset.garbageLevelSpeedup;
+    config.garbageLinesPerAttack = preset.garbageLinesPerAttack;
+    config.garbageApplyOnSpawn = preset.garbageApplyOnSpawn;
+    config.garbageMaxPending = preset.garbageMaxPending;
+  }
+
+  function applyModeDefaults(modeName) {
+    if (modeName === "modern") {
+      config.startLevel = 1;
+      config.resumeCountdownStyle = "notice";
+      config.lockDelayScaleWithLevel = true;
+      ghostEnabled = true;
+    }
+
+    if (modeName === "classic") {
+      config.startLevel = 1;
+      config.classicAuthentic = true;
+      config.classicDisableHardDrop = true;
+      config.classicDisableHold = true;
+      config.classicDisableGhost = true;
+      config.classicLimitedKicks = true;
+      config.lockDelayScaleWithLevel = true;
+      ghostEnabled = false;
+    }
+
+    if (modeName === "sprint") {
+      config.startLevel = 1;
+      config.lockDelayScaleWithLevel = true;
+      ghostEnabled = true;
+    }
+
+    if (modeName === "ultra") {
+      config.startLevel = 1;
+      config.lockDelayScaleWithLevel = true;
+      ghostEnabled = true;
+    }
+
+    if (modeName === "zen") {
+      config.zenGravityEnabled = false;
+      config.zenInfiniteLock = true;
+      config.zenUndoLimit = 50;
+      ghostEnabled = true;
+    }
+
+    if (modeName === "garbage") {
+      config.startLevel = 1;
+      config.garbagePreset = "normal";
+      applyGarbagePreset("normal");
+      config.garbageMeterEnabled = true;
+      config.lockDelayScaleWithLevel = true;
+      ghostEnabled = true;
+    }
+
+    savePreferences();
+  }
+
+  window.applyDefaultsForSelectedMode = function applyDefaultsForSelectedMode() {
+    const modeSelect = $("modeSelect");
+
+    if (modeSelect) {
+      mode = modeSelect.value;
+    }
+
+    applyModeDefaults(mode);
+    openModeSetup();
+  };
+
+  /* ==========================================================================
+     COLLISION / POSITIONING
+     ========================================================================== */
+
+  function collidesAt(x, y, shape) {
+    for (let row = 0; row < shape.length; row++) {
+      for (let col = 0; col < shape[row].length; col++) {
+        if (!shape[row][col]) {
+          continue;
+        }
+
+        const boardX = x + col;
+        const boardY = y + row;
+
+        if (boardX < 0 || boardX >= BOARD_WIDTH) {
+          return true;
+        }
+
+        if (boardY >= BOARD_HEIGHT) {
+          return true;
+        }
+
+        if (boardY >= 0 && board[boardY][boardX]) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  function isGrounded() {
+    if (!activePiece) {
+      return false;
+    }
+
+    return collidesAt(
+      activePiece.x,
+      activePiece.y + 1,
+      activePiece.shape
+    );
+  }
+
+  function canAct() {
+    if (!started) {
+      return false;
+    }
+
+    if (paused || gameOver || confirmingRestart) {
+      return false;
+    }
+
+    if (resumeCountdownTimer > 0) {
+      return false;
+    }
+
+    if (!activePiece) {
+      return false;
+    }
+
+    if (clearingRows.length > 0) {
+      return false;
+    }
+
+    if (spawnPending) {
+      return false;
+    }
+
+    return true;
+  }
+
+  function resetLockDelayIfAllowed() {
+    if (!isGrounded()) {
+      return;
+    }
+
+    const resetLimit = Math.max(1, Number(config.lockResetLimit) || DEFAULT_CONFIG.lockResetLimit);
+
+    if (lockResets >= resetLimit) {
+      return;
+    }
+
+    lockTimer = 0;
+    lockResets++;
+  }
+
+  /* ==========================================================================
+     INPUT BUFFER
+     ========================================================================== */
+
+  function bufferAction(action) {
+    if (!started || gameOver || paused) {
+      return;
+    }
+
+    bufferedAction = {
+      action,
+      timestamp: performance.now()
+    };
+  }
+
+  function applyBufferedAction() {
+    if (!bufferedAction) {
+      return;
+    }
+
+    const age = performance.now() - bufferedAction.timestamp;
+
+    if (age > config.inputBuffer) {
+      bufferedAction = null;
+      return;
+    }
+
+    const action = bufferedAction.action;
+
+    bufferedAction = null;
+    performAction(action);
+  }
+
+  /* ==========================================================================
+     ZEN UNDO SNAPSHOTS
+     ========================================================================== */
+
+  function createGameSnapshot() {
+    return {
+      board: board.map(row => row.slice()),
+      activePiece: clonePieceObject(activePiece),
+      holdPieceType,
+      canHold,
+      queue: queue.slice(),
+
+      score,
+      lines,
+      level,
+      combo,
+      backToBack,
+
+      piecesPlaced,
+      tetrises,
+      perfectClears,
+      maxCombo,
+      inputCount,
+
+      garbagePending,
+      garbageChargeTimer,
+      lastGarbageHole,
+      garbageAttacksSurvived
+    };
+  }
+
+  function restoreGameSnapshot(snapshot) {
+    board = snapshot.board.map(row => row.slice());
+    activePiece = clonePieceObject(snapshot.activePiece);
+    holdPieceType = snapshot.holdPieceType;
+    canHold = snapshot.canHold;
+    queue = snapshot.queue.slice();
+
+    score = snapshot.score;
+    lines = snapshot.lines;
+    level = snapshot.level;
+    combo = snapshot.combo;
+    backToBack = snapshot.backToBack;
+
+    piecesPlaced = snapshot.piecesPlaced;
+    tetrises = snapshot.tetrises;
+    perfectClears = snapshot.perfectClears;
+    maxCombo = snapshot.maxCombo;
+    inputCount = snapshot.inputCount;
+
+    garbagePending = snapshot.garbagePending;
+    garbageChargeTimer = snapshot.garbageChargeTimer;
+    lastGarbageHole = snapshot.lastGarbageHole;
+    garbageAttacksSurvived = snapshot.garbageAttacksSurvived;
+
+    clearingRows = [];
+    clearAnimationTimer = 0;
+    spawnPending = false;
+    spawnTimer = 0;
+    gravityTimer = 0;
+    lockTimer = 0;
+    lockResets = 0;
+    bufferedAction = null;
+  }
+
+  function pushZenUndoSnapshot() {
+    if (mode !== "zen") {
+      return;
+    }
+
+    zenHistory.push(createGameSnapshot());
+
+    const limit = Math.max(1, Number(config.zenUndoLimit) || 30);
+
+    while (zenHistory.length > limit) {
+      zenHistory.shift();
+    }
+  }
+
+  window.zenUndoTool = function zenUndoTool() {
+    if (mode !== "zen") {
+      return;
+    }
+
+    const snapshot = zenHistory.pop();
+
+    if (!snapshot) {
+      announce("NO UNDO", 900);
+      zenToolsMenu();
+      return;
+    }
+
+    restoreGameSnapshot(snapshot);
+    announce("UNDO", 900);
+    zenToolsMenu();
+  };
+
+  /* ==========================================================================
+     MOVEMENT / ROTATION / DROPPING
+     ========================================================================== */
+
+  function countInput() {
+    inputCount++;
+  }
+
+  function moveHorizontal(direction) {
+    if (!canAct()) {
+      bufferAction(direction < 0 ? "left" : "right");
+      return;
+    }
+
+    countInput();
+
+    const newX = activePiece.x + direction;
+
+    if (!collidesAt(newX, activePiece.y, activePiece.shape)) {
+      activePiece.x = newX;
+      lastActionWasRotation = false;
+      resetLockDelayIfAllowed();
+      playSfx("move");
+    }
+  }
+
+  function rotateMatrix(matrix, direction) {
+    const size = matrix.length;
+    const result = Array.from(
+      { length: size },
+      () => Array(size).fill(0)
+    );
+
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        if (direction > 0) {
+          result[x][size - 1 - y] = matrix[y][x];
+        } else {
+          result[size - 1 - x][y] = matrix[y][x];
+        }
+      }
+    }
+
+    return result;
+  }
+
+  function rotatePiece(direction) {
+    if (!canAct()) {
+      bufferAction(direction > 0 ? "rotateCw" : "rotateCcw");
+      return;
+    }
+
+    countInput();
+
+    if (activePiece.type === "O") {
+      return;
+    }
+
+    const oldRotation = activePiece.rotation;
+    const newRotation = (
+      activePiece.rotation + (direction > 0 ? 1 : 3)
+    ) % 4;
+
+    const rotatedShape = rotateMatrix(activePiece.shape, direction);
+    const kickKey = oldRotation + ">" + newRotation;
+
+    let kicks;
+
+    if (isClassic && (config.classicAuthentic || config.classicLimitedKicks)) {
+      kicks = [[0, 0]];
+    } else {
+      const kickTable = activePiece.type === "I" ? I_KICKS : NORMAL_KICKS;
+      kicks = kickTable[kickKey] || [[0, 0]];
+    }
+
+    for (const [kickX, kickY] of kicks) {
+      const testX = activePiece.x + kickX;
+      const testY = activePiece.y - kickY;
+
+      if (!collidesAt(testX, testY, rotatedShape)) {
+        activePiece.x = testX;
+        activePiece.y = testY;
+        activePiece.shape = rotatedShape;
+        activePiece.rotation = newRotation;
+
+        lastActionWasRotation = activePiece.type === "T";
+
+        resetLockDelayIfAllowed();
+        playSfx("rotate");
+
+        return;
+      }
+    }
+  }
+
+  function softDrop(manual) {
+    if (!canAct()) {
+      bufferAction("softDrop");
+      return;
+    }
+
+    if (manual) {
+      countInput();
+    }
+
+    if (!collidesAt(activePiece.x, activePiece.y + 1, activePiece.shape)) {
+      activePiece.y++;
+      lockTimer = 0;
+
+      if (manual) {
+        score += 1;
+        gravityTimer = 0;
+      }
+
+      return;
+    }
+
+    /*
+      Soft drop should not behave like hard drop.
+
+      Previously, pressing Soft Drop while the piece was already grounded
+      filled the lock timer immediately, causing the piece to lock as soon
+      as Down was pressed against the stack. In a Tetris-style control
+      scheme, manual soft drop only moves the piece faster; it should not
+      force an instant lock. The normal lock-delay loop below will handle
+      locking naturally once the piece is grounded.
+    */
+  }
+
+  function hardDrop() {
+    if (!canAct()) {
+      bufferAction("hardDrop");
+      return;
+    }
+
+    if (isClassic && (config.classicAuthentic || config.classicDisableHardDrop)) {
+      return;
+    }
+
+    countInput();
+
+    let distance = 0;
+
+    while (
+      !collidesAt(
+        activePiece.x,
+        activePiece.y + 1,
+        activePiece.shape
+      )
+    ) {
+      activePiece.y++;
+      distance++;
+    }
+
+    score += distance * 2;
+
+    playSfx("drop");
+    lockPiece();
+  }
+
+  function holdPiece() {
+    if (!canAct()) {
+      bufferAction("hold");
+      return;
+    }
+
+    countInput();
+
+    if (isClassic && (config.classicAuthentic || config.classicDisableHold)) {
+      return;
+    }
+
+    if (!canHold) {
+      return;
+    }
+
+    const currentType = activePiece.type;
+
+    if (!holdPieceType) {
+      holdPieceType = currentType;
+      queueSpawn();
+    } else {
+      activePiece = createPiece(holdPieceType);
+      holdPieceType = currentType;
+
+      lockTimer = 0;
+      lockResets = 0;
+      lastActionWasRotation = false;
+
+      if (collidesAt(activePiece.x, activePiece.y, activePiece.shape)) {
+        endGame(false);
+      }
+    }
+
+    canHold = false;
+    playSfx("hold");
+  }
+
+  /* ==========================================================================
+     SPAWNING
+     ========================================================================== */
+
+  function queueSpawn() {
+    activePiece = null;
+    spawnPending = true;
+    spawnTimer = config.are;
+  }
+
+  function spawnPiece() {
+    applyGarbageBeforeSpawnIfNeeded();
+
+    activePiece = createPiece(getNextPieceType());
+
+    canHold = true;
+    lockTimer = 0;
+    lockResets = 0;
+    lastActionWasRotation = false;
+
+    spawnPending = false;
+    spawnTimer = 0;
+
+    if (collidesAt(activePiece.x, activePiece.y, activePiece.shape)) {
+      if (mode === "zen") {
+        board = createEmptyBoard();
+        announce("ZEN RESET", 1200);
+      } else {
+        endGame(false);
+      }
+
+      return;
+    }
+
+    applyBufferedAction();
+  }
+
+  /* ==========================================================================
+     LOCKING / LINE CLEARS
+     ========================================================================== */
+
+  function lockPiece() {
+    if (!activePiece) {
+      return;
+    }
+
+    pushZenUndoSnapshot();
+
+    const tSpinType = detectTSpin();
+
+    for (let row = 0; row < activePiece.shape.length; row++) {
+      for (let col = 0; col < activePiece.shape[row].length; col++) {
+        if (!activePiece.shape[row][col]) {
+          continue;
+        }
+
+        const boardX = activePiece.x + col;
+        const boardY = activePiece.y + row;
+
+        if (boardY < 0) {
+          if (mode === "zen") {
+            board = createEmptyBoard();
+            announce("ZEN RESET", 1200);
+            queueSpawn();
+          } else {
+            endGame(false);
+          }
+
+          return;
+        }
+
+        board[boardY][boardX] = activePiece.type;
+      }
+    }
+
+    piecesPlaced++;
+    activePiece = null;
+
+    checkForLineClears(tSpinType);
+  }
+
+  function checkForLineClears(tSpinType) {
+    clearingRows = [];
+
+    for (let row = 0; row < BOARD_HEIGHT; row++) {
+      if (board[row].every(Boolean)) {
+        clearingRows.push(row);
+      }
+    }
+
+    if (clearingRows.length > 0 || tSpinType) {
+      scoreLineClear(clearingRows.length, tSpinType);
+    }
+
+    if (clearingRows.length > 0) {
+      clearAnimationTimer = LINE_CLEAR_ANIMATION_DURATION;
+      playSfx("clear");
+    } else {
+      combo = -1;
+      queueSpawn();
+    }
+  }
+
+  function finishLineClear() {
+    const clearedCount = clearingRows.length;
+
+    board = board.filter((row, rowIndex) => {
+      return !clearingRows.includes(rowIndex);
+    });
+
+    while (board.length < BOARD_HEIGHT) {
+      board.unshift(Array(BOARD_WIDTH).fill(null));
+    }
+
+    lines += clearedCount;
+
+    if (mode !== "zen") {
+      const oldLevel = level;
+      level = getLevelFromLines();
+
+      if (level > oldLevel) {
+        announce("LEVEL " + padNumber(level, 2), 1200);
+      }
+    }
+
+    if (isPerfectClear()) {
+      score += 3500 * level;
+      perfectClears++;
+      announce("PERFECT CLEAR", 1600);
+    }
+
+    if (mode === "sprint" && lines >= 40) {
+      endGame(true);
+      return;
+    }
+
+    clearingRows = [];
+    queueSpawn();
+  }
+
+  function isPerfectClear() {
+    return board.every(row => row.every(cell => !cell));
+  }
+
+  /* ==========================================================================
+     T-SPIN DETECTION
+     ========================================================================== */
+
+  function detectTSpin() {
+    if (!lastActionWasRotation) {
+      return "";
+    }
+
+    if (!activePiece || activePiece.type !== "T") {
+      return "";
+    }
+
+    const corners = [
+      [activePiece.x, activePiece.y],
+      [activePiece.x + 2, activePiece.y],
+      [activePiece.x, activePiece.y + 2],
+      [activePiece.x + 2, activePiece.y + 2]
+    ];
+
+    let filledCorners = 0;
+
+    for (const [x, y] of corners) {
+      if (x < 0 || x >= BOARD_WIDTH || y >= BOARD_HEIGHT) {
+        filledCorners++;
+        continue;
+      }
+
+      if (y >= 0 && board[y][x]) {
+        filledCorners++;
+      }
+    }
+
+    if (filledCorners < 3) {
+      return "";
+    }
+
+    const frontCorners = getTSpinFrontCorners();
+
+    let filledFrontCorners = 0;
+
+    for (const [x, y] of frontCorners) {
+      if (x < 0 || x >= BOARD_WIDTH || y >= BOARD_HEIGHT) {
+        filledFrontCorners++;
+        continue;
+      }
+
+      if (y >= 0 && board[y][x]) {
+        filledFrontCorners++;
+      }
+    }
+
+    return filledFrontCorners < 2 ? "mini" : "full";
+  }
+
+  function getTSpinFrontCorners() {
+    if (activePiece.rotation === 0) {
+      return [
+        [activePiece.x, activePiece.y],
+        [activePiece.x + 2, activePiece.y]
+      ];
+    }
+
+    if (activePiece.rotation === 1) {
+      return [
+        [activePiece.x + 2, activePiece.y],
+        [activePiece.x + 2, activePiece.y + 2]
+      ];
+    }
+
+    if (activePiece.rotation === 2) {
+      return [
+        [activePiece.x, activePiece.y + 2],
+        [activePiece.x + 2, activePiece.y + 2]
+      ];
+    }
+
+    return [
+      [activePiece.x, activePiece.y],
+      [activePiece.x, activePiece.y + 2]
+    ];
+  }
+
+  /* ==========================================================================
+     SCORING
+     ========================================================================== */
+
+  function scoreLineClear(numberOfLines, tSpinType) {
+    let baseScore = 0;
+    let isDifficultClear = false;
+    let clearName = "";
+
+    if (tSpinType === "full") {
+      baseScore = [400, 800, 1200, 1600][numberOfLines] || 400;
+      isDifficultClear = numberOfLines > 0;
+      clearName = "T-SPIN";
+
+      if (numberOfLines === 1) {
+        clearName += " SINGLE";
+      } else if (numberOfLines === 2) {
+        clearName += " DOUBLE";
+      } else if (numberOfLines === 3) {
+        clearName += " TRIPLE";
+      }
+    } else if (tSpinType === "mini") {
+      baseScore = numberOfLines > 0 ? 200 : 100;
+      clearName = "T-SPIN MINI";
+
+      if (numberOfLines === 1) {
+        clearName += " SINGLE";
+      }
+    } else {
+      baseScore = [0, 100, 300, 500, 800][numberOfLines];
+
+      if (numberOfLines === 1) {
+        clearName = "SINGLE";
+      } else if (numberOfLines === 2) {
+        clearName = "DOUBLE";
+      } else if (numberOfLines === 3) {
+        clearName = "TRIPLE";
+      } else if (numberOfLines === 4) {
+        clearName = "TETRIS";
+      }
+
+      isDifficultClear = numberOfLines === 4;
+    }
+
+    if (isDifficultClear && backToBack) {
+      baseScore = Math.floor(baseScore * 1.5);
+      clearName = "B2B " + clearName;
+    }
+
+    if (isDifficultClear) {
+      backToBack = true;
+    } else if (numberOfLines > 0) {
+      backToBack = false;
+    }
+
+    if (numberOfLines > 0) {
+      combo++;
+      maxCombo = Math.max(maxCombo, combo);
+
+      if (combo > 0) {
+        const comboBonus = combo * 50 * level;
+        score += comboBonus;
+        clearName += " COMBO " + combo;
+      }
+
+      if (mode === "garbage") {
+        garbagePending = Math.max(0, garbagePending - numberOfLines);
+      }
+    }
+
+    score += baseScore * level;
+
+    if (numberOfLines === 4) {
+      tetrises++;
+    }
+
+    if (clearName) {
+      announce(clearName, 1400);
+    }
+  }
+
+  /* ==========================================================================
+     GARBAGE SURVIVAL
+     ========================================================================== */
+
+  function getGarbageInterval() {
+    const scaledInterval =
+      config.garbageBaseInterval -
+      (level - 1) * config.garbageLevelSpeedup;
+
+    return Math.max(
+      config.garbageMinimumInterval,
+      scaledInterval
+    );
+  }
+
+  function updateGarbageMode(deltaTime) {
+    if (mode !== "garbage") {
+      return;
+    }
+
+    garbageChargeTimer += deltaTime;
+
+    const interval = getGarbageInterval();
+
+    while (garbageChargeTimer >= interval) {
+      garbageChargeTimer -= interval;
+      queueGarbageAttack(config.garbageLinesPerAttack);
+    }
+  }
+
+  function queueGarbageAttack(linesToAdd) {
+    const oldPending = garbagePending;
+
+    garbagePending = Math.min(
+      config.garbageMaxPending,
+      garbagePending + linesToAdd
+    );
+
+    if (garbagePending > oldPending) {
+      garbageAttacksSurvived++;
+      announce("GARBAGE WARNING", 900);
+      playSfx("garbage");
+    }
+  }
+
+  function applyGarbageBeforeSpawnIfNeeded() {
+    if (mode !== "garbage") {
+      return;
+    }
+
+    if (!config.garbageApplyOnSpawn) {
+      return;
+    }
+
+    if (garbagePending <= 0) {
+      return;
+    }
+
+    const amountToApply = Math.min(
+      garbagePending,
+      config.garbageLinesPerAttack
+    );
+
+    applyGarbageLines(amountToApply);
+    garbagePending -= amountToApply;
+
+    announce(amountToApply + " GARBAGE", 900);
+  }
+
+  function applyGarbageLines(amount) {
+    for (let i = 0; i < amount; i++) {
+      if (board[0].some(Boolean)) {
+        endGame(false);
+        return;
+      }
+
+      board.shift();
+      board.push(createGarbageRow());
+    }
+
+    if (activePiece) {
+      moveActivePieceOutOfCollisionAfterGarbage();
+    }
+  }
+
+  function createGarbageRow() {
+    let hole = lastGarbageHole;
+
+    if (BOARD_WIDTH > 1) {
+      while (hole === lastGarbageHole) {
+        hole = Math.floor(Math.random() * BOARD_WIDTH);
+      }
+    }
+
+    lastGarbageHole = hole;
+
+    const row = Array(BOARD_WIDTH).fill("G");
+    row[hole] = null;
+
+    return row;
+  }
+
+  function moveActivePieceOutOfCollisionAfterGarbage() {
+    while (
+      collidesAt(activePiece.x, activePiece.y, activePiece.shape) &&
+      activePiece.y > -4
+    ) {
+      activePiece.y--;
+    }
+
+    if (collidesAt(activePiece.x, activePiece.y, activePiece.shape)) {
+      endGame(false);
+    }
+  }
+
+  /* ==========================================================================
+     ZEN MODE HELPERS
+     ========================================================================== */
+
+  function clearZenBoard() {
+    if (mode !== "zen") {
+      return;
+    }
+
+    if (!started || gameOver) {
+      return;
+    }
+
+    pushZenUndoSnapshot();
+
+    board = createEmptyBoard();
+    score = 0;
+    lines = 0;
+    combo = -1;
+    backToBack = false;
+
+    announce("BOARD CLEARED", 1200);
+  }
+
+  window.zenToolsMenu = function zenToolsMenu() {
+    if (mode !== "zen") {
+      return;
+    }
+
+    showOverlay(
+      `
+      <h1>ZEN TOOLS</h1>
+
+      <p class="hint">
+        Practice tools for setups, recovery, and piece control.
+      </p>
+
+      <div class="row">
+        <button onclick="zenUndoTool()">UNDO</button>
+        <button onclick="zenClearBoardTool()">CLEAR BOARD</button>
+        <button onclick="zenAddGarbageTool()">ADD GARBAGE</button>
+        <button onclick="zenToggleGravityTool()">TOGGLE GRAVITY</button>
+        <button onclick="zenToggleInfiniteLockTool()">TOGGLE LOCK</button>
+      </div>
+
+      <h2>Spawn Piece</h2>
+      <div class="row">
+        <button onclick="zenSpawnPieceTool('I')">I</button>
+        <button onclick="zenSpawnPieceTool('O')">O</button>
+        <button onclick="zenSpawnPieceTool('T')">T</button>
+        <button onclick="zenSpawnPieceTool('S')">S</button>
+        <button onclick="zenSpawnPieceTool('Z')">Z</button>
+        <button onclick="zenSpawnPieceTool('J')">J</button>
+        <button onclick="zenSpawnPieceTool('L')">L</button>
+      </div>
+
+      <p>
+        Gravity: ${config.zenGravityEnabled ? "ON" : "OFF"}<br>
+        Infinite Lock: ${config.zenInfiniteLock ? "ON" : "OFF"}<br>
+        Undo Steps: ${zenHistory.length}
+      </p>
+
+      <button onclick="showPauseMenu()">BACK</button>
+      `,
+      true
+    );
+  };
+
+  window.zenClearBoardTool = function zenClearBoardTool() {
+    clearZenBoard();
+    zenToolsMenu();
+  };
+
+  window.zenAddGarbageTool = function zenAddGarbageTool() {
+    if (mode !== "zen") {
+      return;
+    }
+
+    pushZenUndoSnapshot();
+    applyGarbageLines(1);
+    announce("ZEN GARBAGE", 900);
+    zenToolsMenu();
+  };
+
+  window.zenToggleGravityTool = function zenToggleGravityTool() {
+    config.zenGravityEnabled = !config.zenGravityEnabled;
+    savePreferences();
+    zenToolsMenu();
+  };
+
+  window.zenToggleInfiniteLockTool = function zenToggleInfiniteLockTool() {
+    config.zenInfiniteLock = !config.zenInfiniteLock;
+    savePreferences();
+    zenToolsMenu();
+  };
+
+  window.zenSpawnPieceTool = function zenSpawnPieceTool(type) {
+    if (mode !== "zen") {
+      return;
+    }
+
+    pushZenUndoSnapshot();
+
+    activePiece = createPiece(type);
+    spawnPending = false;
+    spawnTimer = 0;
+    canHold = true;
+
+    announce("ZEN " + type, 900);
+    hideOverlay();
+    paused = false;
+    lastFrameTime = performance.now();
+  };
+
+  /* ==========================================================================
+     GHOST PIECE
+     ========================================================================== */
+
+  function getGhostPiece() {
+    const ghost = {
+      type: activePiece.type,
+      shape: activePiece.shape,
+      x: activePiece.x,
+      y: activePiece.y
+    };
+
+    while (!collidesAt(ghost.x, ghost.y + 1, ghost.shape)) {
+      ghost.y++;
+    }
+
+    return ghost;
+  }
+
+  /* ==========================================================================
+     DANGER HEIGHT HELPERS
+     ========================================================================== */
+
+  function getHighestOccupiedRow() {
+    for (let row = 0; row < BOARD_HEIGHT; row++) {
+      if (board[row].some(Boolean)) {
+        return row;
+      }
+    }
+
+    return BOARD_HEIGHT;
+  }
+
+  function isBoardInDanger() {
+    if (!started || paused || gameOver) {
+      return false;
+    }
+
+    return getHighestOccupiedRow() <= config.dangerRowThreshold;
+  }
+
+  function drawDangerWarningBorder() {
+    if (!isBoardInDanger()) {
+      return;
+    }
+
+    const pulse = 0.45 + Math.sin(performance.now() / 90) * 0.25;
+
+    boardCtx.save();
+    boardCtx.globalAlpha = pulse;
+    boardCtx.strokeStyle = "#ff5555";
+    boardCtx.lineWidth = 5;
+    boardCtx.strokeRect(3, 3, BOARD_PIXEL_WIDTH - 6, BOARD_PIXEL_HEIGHT - 6);
+    boardCtx.restore();
+  }
+
+  /* ==========================================================================
+     DRAWING
+     ========================================================================== */
+
+  function drawBlock(context, x, y, typeOrColor, size, alpha = 1) {
+    const palette = getActivePalette();
+    const color = palette[typeOrColor] || typeOrColor;
+
+    context.globalAlpha = alpha;
+    context.fillStyle = color;
+    context.fillRect(x, y, size, size);
+
+    context.strokeStyle = "#000000";
+    context.lineWidth = 2;
+    context.strokeRect(x + 1, y + 1, size - 2, size - 2);
+
+    context.globalAlpha = 1;
+  }
+
+  function drawClearingCell(x, y, col) {
+    const progress = 1 - clearAnimationTimer / LINE_CLEAR_ANIMATION_DURATION;
+    const centerDistance = Math.abs(col - (BOARD_WIDTH - 1) / 2);
+    const delay = centerDistance * 0.045;
+    const localProgress = clampNumber((progress - delay) / 0.72, 0, 1);
+
+    const shrink = Math.floor(localProgress * CELL_SIZE * 0.5);
+    const size = Math.max(0, CELL_SIZE - shrink * 2);
+
+    boardCtx.save();
+    boardCtx.globalAlpha = 1 - localProgress;
+    boardCtx.fillStyle = "#ffffff";
+    boardCtx.fillRect(
+      x + shrink,
+      y + shrink,
+      size,
+      size
+    );
+    boardCtx.restore();
+  }
+
+  function drawPiece(context, piece, alpha = 1) {
+    for (let row = 0; row < piece.shape.length; row++) {
+      for (let col = 0; col < piece.shape[row].length; col++) {
+        if (!piece.shape[row][col]) {
+          continue;
+        }
+
+        const pixelX = (piece.x + col) * CELL_SIZE;
+        const pixelY = (piece.y + row) * CELL_SIZE;
+
+        if (pixelY >= 0) {
+          let drawAlpha = alpha;
+
+          if (
+            context === boardCtx &&
+            piece === activePiece &&
+            isGrounded() &&
+            getEffectiveLockDelay() > 0
+          ) {
+            const lockRatio = lockTimer / getEffectiveLockDelay();
+
+            if (lockRatio > 0.7) {
+              drawAlpha = 0.55 + Math.sin(performance.now() / 70) * 0.2;
+            }
+          }
+
+          drawBlock(
+            context,
+            pixelX,
+            pixelY,
+            piece.type,
+            CELL_SIZE,
+            drawAlpha
+          );
+        }
+      }
+    }
+  }
+
+  function drawBoard() {
+    boardCtx.clearRect(
+      0,
+      0,
+      BOARD_PIXEL_WIDTH,
+      BOARD_PIXEL_HEIGHT
+    );
+
+    drawBoardCells();
+
+    if (activePiece && !gameOver) {
+      const classicGhostDisabled =
+        isClassic &&
+        (config.classicAuthentic || config.classicDisableGhost);
+
+      if (ghostEnabled && !classicGhostDisabled) {
+        drawPiece(boardCtx, getGhostPiece(), 0.25);
+      }
+
+      drawPiece(boardCtx, activePiece, 1);
+    }
+
+    drawDangerWarningBorder();
+    drawMessageOverlay();
+  }
+
+  function drawBoardCells() {
+    for (let row = 0; row < BOARD_HEIGHT; row++) {
+      for (let col = 0; col < BOARD_WIDTH; col++) {
+        const pixelX = col * CELL_SIZE;
+        const pixelY = row * CELL_SIZE;
+        const cell = board[row][col];
+
+        if (cell) {
+          drawBlock(
+            boardCtx,
+            pixelX,
+            pixelY,
+            cell,
+            CELL_SIZE,
+            1
+          );
+        } else {
+          boardCtx.strokeStyle =
+            config.palette === "contrast" ? "#222222" : "#111111";
+
+          boardCtx.strokeRect(
+            pixelX,
+            pixelY,
+            CELL_SIZE,
+            CELL_SIZE
+          );
+        }
+
+        if (clearingRows.includes(row)) {
+          drawClearingCell(pixelX, pixelY, col);
+        }
+      }
+    }
+  }
+
+  function drawMessageOverlay() {
+    return;
+  }
+
+  function drawMiniPiece(context, type, yOffset) {
+    if (!type) {
+      return;
+    }
+
+    const shape = SHAPES[type];
+    const size = 20;
+
+    let minX = 99;
+    let maxX = -1;
+    let minY = 99;
+    let maxY = -1;
+
+    for (let row = 0; row < shape.length; row++) {
+      for (let col = 0; col < shape[row].length; col++) {
+        if (!shape[row][col]) {
+          continue;
+        }
+
+        minX = Math.min(minX, col);
+        maxX = Math.max(maxX, col);
+        minY = Math.min(minY, row);
+        maxY = Math.max(maxY, row);
+      }
+    }
+
+    const pieceWidth = (maxX - minX + 1) * size;
+    const pieceHeight = (maxY - minY + 1) * size;
+
+    const offsetX = (120 - pieceWidth) / 2;
+    const offsetY = yOffset + (66 - pieceHeight) / 2;
+
+    for (let row = 0; row < shape.length; row++) {
+      for (let col = 0; col < shape[row].length; col++) {
+        if (!shape[row][col]) {
+          continue;
+        }
+
+        drawBlock(
+          context,
+          offsetX + (col - minX) * size,
+          offsetY + (row - minY) * size,
+          type,
+          size,
+          1
+        );
+      }
+    }
+  }
+
+  function drawSidePanels() {
+    holdCtx.clearRect(0, 0, holdCanvas.width, holdCanvas.height);
+    nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+
+    if (mobileHoldCtx) {
+      mobileHoldCtx.clearRect(
+        0,
+        0,
+        mobileHoldCanvas.width,
+        mobileHoldCanvas.height
+      );
+    }
+
+    if (mobileNextCtx) {
+      mobileNextCtx.clearRect(
+        0,
+        0,
+        mobileNextCanvas.width,
+        mobileNextCanvas.height
+      );
+    }
+
+    const classicHoldDisabled =
+      isClassic &&
+      (config.classicAuthentic || config.classicDisableHold);
+
+    if (!classicHoldDisabled) {
+      drawMiniPiece(holdCtx, holdPieceType, 20);
+
+      if (mobileHoldCtx) {
+        drawMiniPiece(mobileHoldCtx, holdPieceType, 5);
+      }
+    }
+
+    if (isClassic) {
+      nextCtx.fillStyle = "#ffffff";
+      nextCtx.font = "32px Courier New";
+      nextCtx.textAlign = "center";
+      nextCtx.textBaseline = "middle";
+      nextCtx.fillText("?", 60, 55);
+
+      if (mobileNextCtx) {
+        mobileNextCtx.fillStyle = "#ffffff";
+        mobileNextCtx.font = "28px Courier New";
+        mobileNextCtx.textAlign = "center";
+        mobileNextCtx.textBaseline = "middle";
+        mobileNextCtx.fillText("?", 60, 38);
+      }
+
+      return;
+    }
+
+    for (let i = 0; i < 5; i++) {
+      drawMiniPiece(nextCtx, queue[i], i * 68);
+    }
+
+    if (mobileNextCtx) {
+      drawMiniPiece(mobileNextCtx, queue[0], 5);
+    }
+  }
+
+  /* ==========================================================================
+     UI UPDATE
+     ========================================================================== */
+
+  function updateUi() {
+    $("score").textContent = padNumber(score, 6);
+    $("best").textContent = getBestDisplayForCurrentMode();
+    $("level").textContent = padNumber(level, 2);
+    $("lines").textContent = padNumber(lines, 3);
+
+    const timeDisplay = mode === "ultra"
+      ? formatTime(120000 - elapsedTime)
+      : formatTime(elapsedTime);
+
+    $("time").textContent = timeDisplay;
+
+    if ($("mobileScore")) {
+      $("mobileScore").textContent = padNumber(score, 6);
+    }
+
+    if ($("mobileLevel")) {
+      $("mobileLevel").textContent = padNumber(level, 2);
+    }
+
+    if ($("mobileLines")) {
+      $("mobileLines").textContent = padNumber(lines, 3);
+    }
+
+    if ($("mobileTime")) {
+      $("mobileTime").textContent = timeDisplay;
+    }
+
+    if (mode === "garbage") {
+      $("modeName").textContent =
+        "GARBAGE " + String(config.garbagePreset || "normal").toUpperCase();
+    } else {
+      $("modeName").textContent = mode.toUpperCase();
+    }
+
+    if ($("mobileMode")) {
+      $("mobileMode").textContent = $("modeName").textContent;
+    }
+
+    const comboDisplay = Math.max(0, combo);
+    const b2bDisplay = backToBack ? "YES" : "NO";
+
+    $("combo").textContent = comboDisplay;
+    $("b2b").textContent = b2bDisplay;
+
+    if ($("mobileCombo")) {
+      $("mobileCombo").textContent = comboDisplay;
+    }
+
+    if ($("mobileB2b")) {
+      $("mobileB2b").textContent = b2bDisplay;
+    }
+
+    const seconds = Math.max(1, elapsedTime) / 1000;
+    const pps = piecesPlaced / seconds;
+    const kpp = inputCount / Math.max(1, piecesPlaced);
+
+    $("pps").textContent = pps.toFixed(2);
+    $("kpp").textContent = kpp.toFixed(2);
+
+    let garbageDisplay = "-";
+
+    if (mode === "garbage") {
+      if (config.garbageMeterEnabled) {
+        garbageDisplay =
+          garbagePending +
+          "/" +
+          config.garbageMaxPending +
+          " " +
+          makeMeter(garbagePending, config.garbageMaxPending, 6);
+      } else {
+        garbageDisplay = String(garbagePending);
+      }
+    }
+
+    $("garbage").textContent = garbageDisplay;
+
+    if ($("mobileGarbage")) {
+      $("mobileGarbage").textContent = garbageDisplay;
+    }
+
+    if (messageTimer > 0) {
+      $("notice").textContent = messageText;
+    } else if (mode === "garbage" && started && !paused && !gameOver) {
+      const timeRemaining = Math.max(
+        0,
+        Math.ceil((getGarbageInterval() - garbageChargeTimer) / 1000)
+      );
+
+      $("notice").textContent = "GARBAGE IN " + timeRemaining;
+    } else if (isBoardInDanger()) {
+      $("notice").textContent = "DANGER";
+    } else {
+      $("notice").textContent = messageText;
+    }
+  }
+
+  function announce(text, duration = 1200) {
+    messageText = text;
+    messageTimer = duration;
+    $("notice").textContent = text;
+  }
+
+  /* ==========================================================================
+     TIMING / MAIN LOOP
+     ========================================================================== */
+
+  function getGravityInterval() {
+    if (mode === "zen") {
+      return 900;
+    }
+
+    const index = Math.min(
+      level - 1,
+      GRAVITY_INTERVALS.length - 1
+    );
+
+    return GRAVITY_INTERVALS[index];
+  }
+
+  function updateHeldMovement(deltaTime) {
+    const horizontalRepeatInterval = Math.max(1, Number(config.arr) || 1);
+    const softDropRepeatInterval = Math.max(1, Number(config.softDropRepeat) || 1);
+
+    if (moveLeftHeld && !moveRightHeld) {
+      leftDasTimer += deltaTime;
+
+      if (leftDasTimer > config.das) {
+        leftArrTimer += deltaTime;
+
+        while (leftArrTimer > horizontalRepeatInterval) {
+          moveHorizontal(-1);
+          leftArrTimer -= horizontalRepeatInterval;
+        }
+      }
+    }
+
+    if (moveRightHeld && !moveLeftHeld) {
+      rightDasTimer += deltaTime;
+
+      if (rightDasTimer > config.das) {
+        rightArrTimer += deltaTime;
+
+        while (rightArrTimer > horizontalRepeatInterval) {
+          moveHorizontal(1);
+          rightArrTimer -= horizontalRepeatInterval;
+        }
+      }
+    }
+
+    if (softDropHeld) {
+      softDropHoldTimer += deltaTime;
+
+      if (softDropHoldTimer > 60) {
+        softDropRepeatTimer += deltaTime;
+
+        while (softDropRepeatTimer > softDropRepeatInterval) {
+          softDrop(true);
+          softDropRepeatTimer -= softDropRepeatInterval;
+        }
+      }
+    }
+  }
+
+  function updateResumeCountdown(deltaTime) {
+    if (resumeCountdownTimer <= 0) {
+      return false;
+    }
+
+    resumeCountdownTimer -= deltaTime;
+
+    const number = Math.max(
+      1,
+      Math.ceil(resumeCountdownTimer / 400)
+    );
+
+    if (config.resumeCountdownStyle === "overlay") {
+      showOverlay(
+        "<h1>" + number + "</h1><p>READY</p>",
+        true
+      );
+    } else if (config.resumeCountdownStyle === "notice") {
+      hideOverlay();
+      $("notice").textContent = "READY " + number;
+    } else {
+      hideOverlay();
+    }
+
+    if (resumeCountdownTimer <= 0) {
+      hideOverlay();
+      lastFrameTime = performance.now();
+      announce("GO", 500);
+    }
+
+    return true;
+  }
+
+  function gameLoop(timestamp = 0) {
+    const deltaTime = timestamp - lastFrameTime;
+    lastFrameTime = timestamp;
+
+    if (messageTimer > 0) {
+      messageTimer -= deltaTime;
+    }
+
+    if (started && !paused && !gameOver) {
+      if (!updateResumeCountdown(deltaTime)) {
+        updateGame(deltaTime, timestamp);
+      }
+    }
+
+    drawBoard();
+    drawSidePanels();
+    updateUi();
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  function updateGame(deltaTime, timestamp) {
+    elapsedTime = timestamp - startTime;
+
+    if (mode === "ultra" && elapsedTime >= 120000) {
+      endGame(true);
+      return;
+    }
+
+    updateHeldMovement(deltaTime);
+    updateGarbageMode(deltaTime);
+
+    if (clearingRows.length > 0) {
+      clearAnimationTimer -= deltaTime;
+
+      if (clearAnimationTimer <= 0) {
+        finishLineClear();
+      }
+
+      return;
+    }
+
+    if (spawnPending) {
+      spawnTimer -= deltaTime;
+
+      if (spawnTimer <= 0) {
+        spawnPiece();
+      }
+
+      return;
+    }
+
+    if (!activePiece) {
+      return;
+    }
+
+    const gravityEnabled =
+      mode !== "zen" || config.zenGravityEnabled;
+
+    if (gravityEnabled) {
+      gravityTimer += deltaTime;
+
+      if (gravityTimer >= getGravityInterval()) {
+        softDrop(false);
+        gravityTimer = 0;
+      }
+    }
+
+    const lockEnabled =
+      mode !== "zen" || !config.zenInfiniteLock;
+
+    if (lockEnabled && isGrounded()) {
+      lockTimer += deltaTime;
+
+      if (lockTimer >= getEffectiveLockDelay()) {
+        lockPiece();
+      }
+    } else if (!isGrounded()) {
+      lockTimer = 0;
+    }
+  }
+
+  /* ==========================================================================
+     START / PAUSE / END
+     ========================================================================== */
+
+  window.startGame = function startGame() {
+    const modeSelect = $("modeSelect");
+
+    if (modeSelect) {
+      mode = modeSelect.value;
+    }
+
+    localStorage.setItem("tetrisDeluxeMode", mode);
+
+    isClassic = mode === "classic";
+
+    if (mode === "garbage" && config.garbagePreset !== "custom") {
+      applyGarbagePreset(config.garbagePreset);
+      savePreferences();
+    }
+
+    stopMusic(true);
+
+    board = createEmptyBoard();
+
+    queue = [];
+
+    if (!isClassic) {
+      refillSevenBag();
+      refillSevenBag();
+    }
+
+    activePiece = null;
+    holdPieceType = null;
+    canHold = true;
+
+    score = 0;
+    lines = 0;
+    level = getBaseLevelForCurrentMode();
+    combo = -1;
+    backToBack = false;
+
+    piecesPlaced = 0;
+    tetrises = 0;
+    perfectClears = 0;
+    maxCombo = 0;
+    inputCount = 0;
+
+    started = true;
+    paused = false;
+    gameOver = false;
+    confirmingRestart = false;
+
+    clearingRows = [];
+    clearAnimationTimer = 0;
+
+    gravityTimer = 0;
+    lockTimer = 0;
+    lockResets = 0;
+
+    spawnPending = false;
+    spawnTimer = 0;
+
+    elapsedTime = 0;
+    pauseStartedAt = 0;
+    resumeCountdownTimer = 0;
+
+    moveLeftHeld = false;
+    moveRightHeld = false;
+    softDropHeld = false;
+
+    leftDasTimer = 0;
+    rightDasTimer = 0;
+    softDropHoldTimer = 0;
+
+    leftArrTimer = 0;
+    rightArrTimer = 0;
+    softDropRepeatTimer = 0;
+
+    lastActionWasRotation = false;
+    bufferedAction = null;
+
+    garbagePending = 0;
+    garbageChargeTimer = 0;
+    lastGarbageHole = 4;
+    garbageAttacksSurvived = 0;
+
+    zenHistory = [];
+    lastGameSummary = "";
+
+    startTime = performance.now();
+    lastFrameTime = performance.now();
+
+    hideOverlay();
+    spawnPiece();
+
+    initAudio();
+
+    if (musicEnabled) {
+      startMusic();
+    }
+
+    if (mode === "garbage") {
+      announce("SURVIVE", 1100);
+    } else {
+      announce("GO", 800);
+    }
+  };
+
+  function pauseGame() {
+    if (!started || gameOver) {
+      return;
+    }
+
+    if (!paused) {
+      paused = true;
+      pauseStartedAt = performance.now();
+
+      stopMusic(true);
+
+      moveLeftHeld = false;
+      moveRightHeld = false;
+      softDropHeld = false;
+
+      showPauseMenu();
+      return;
+    }
+
+    paused = false;
+
+    const now = performance.now();
+
+    if (pauseStartedAt) {
+      startTime += now - pauseStartedAt;
+    }
+
+    pauseStartedAt = 0;
+
+    if (config.resumeCountdownStyle === "off") {
+      resumeCountdownTimer = 0;
+      hideOverlay();
+      lastFrameTime = performance.now();
+    } else {
+      resumeCountdownTimer = 1200;
+    }
+
+    if (musicEnabled) {
+      startMusic();
+    }
+  }
+
+  window.pauseGame = pauseGame;
+
+  function showPauseMenu() {
+    let zenButton = "";
+    let debugButton = "";
+
+    if (mode === "zen") {
+      zenButton =
+        '<button onclick="zenToolsMenu()">ZEN TOOLS</button>';
+    }
+
+    if (config.debugMode) {
+      debugButton =
+        '<button onclick="debugMenu()">DEBUG</button>';
+    }
+
+    showOverlay(
+      `
+      <h1>PAUSED</h1>
+      <button onclick="pauseGame()">RESUME</button>
+      <button onclick="requestRestart()">RESTART</button>
+      <button onclick="openModeSetup()">CHANGE MODE</button>
+      <button onclick="settings()">SETTINGS</button>
+      <button onclick="toggleMusicFromMenu()">MUSIC: ${musicEnabled ? "ON" : "OFF"}</button>
+      <button onclick="toggleSfxFromMenu()">SFX: ${sfxEnabled ? "ON" : "OFF"}</button>
+      <button onclick="toggleGhostFromMenu()">GHOST: ${ghostEnabled ? "ON" : "OFF"}</button>
+      ${zenButton}
+      ${debugButton}
+      <button onclick="menu()">MAIN MENU</button>
+      `,
+      true
+    );
+  }
+
+  window.showPauseMenu = showPauseMenu;
+
+  window.toggleMusicFromMenu = function toggleMusicFromMenu() {
+    musicEnabled = !musicEnabled;
+    savePreferences();
+
+    if (musicEnabled && started && !paused && !gameOver) {
+      startMusic();
+    } else if (!musicEnabled) {
+      stopMusic(true);
+    }
+
+    showPauseMenu();
+  };
+
+  window.toggleSfxFromMenu = function toggleSfxFromMenu() {
+    sfxEnabled = !sfxEnabled;
+    savePreferences();
+    showPauseMenu();
+  };
+
+  window.toggleGhostFromMenu = function toggleGhostFromMenu() {
+    ghostEnabled = !ghostEnabled;
+    savePreferences();
+    showPauseMenu();
+  };
+
+  window.mobileQuickMenu = function mobileQuickMenu() {
+    if (started && !gameOver) {
+      pauseGame();
+      return;
+    }
+
+    menu();
+  };
+
+  window.requestRestart = function requestRestart() {
+    if (!config.restartConfirm) {
+      window.startGame();
+      return;
+    }
+
+    confirmingRestart = true;
+
+    showOverlay(
+      `
+      <h1>RESTART?</h1>
+      <p class="danger">Current run will be lost.</p>
+      <button onclick="startGame()">YES, RESTART</button>
+      <button onclick="cancelRestart()">NO, GO BACK</button>
+      `,
+      true
+    );
+  };
+
+  window.cancelRestart = function cancelRestart() {
+    confirmingRestart = false;
+
+    if (paused) {
+      showPauseMenu();
+    } else {
+      hideOverlay();
+    }
+  };
+
+  function endGame(won) {
+    gameOver = true;
+    started = true;
+    paused = false;
+
+    moveLeftHeld = false;
+    moveRightHeld = false;
+    softDropHeld = false;
+
+    stopMusic(true);
+    updateRecords(won);
+    playSfx("game");
+
+    const seconds = Math.max(1, elapsedTime) / 1000;
+    const pps = piecesPlaced / seconds;
+    const kpp = inputCount / Math.max(1, piecesPlaced);
+
+    lastGameSummary = buildGameSummary(won);
+
+    let garbageLine = "";
+
+    if (mode === "garbage") {
+      garbageLine =
+        "<br>GARBAGE ATTACKS " +
+        garbageAttacksSurvived +
+        "<br>SURVIVAL " +
+        formatTime(elapsedTime);
+    }
+
+    showOverlay(
+      `
+      <h1>${won ? "CLEAR" : "GAME OVER"}</h1>
+      <p>
+        SCORE ${padNumber(score, 6)}<br>
+        BEST ${getBestDisplayForCurrentMode()}<br>
+        TIME ${formatTime(elapsedTime)}<br>
+        LINES ${lines}<br>
+        PIECES ${piecesPlaced}<br>
+        PPS ${pps.toFixed(2)}<br>
+        KPP ${kpp.toFixed(2)}<br>
+        TETRISES ${tetrises}<br>
+        PERFECT CLEARS ${perfectClears}<br>
+        MAX COMBO ${maxCombo}
+        ${garbageLine}
+      </p>
+
+      <pre style="text-align:left;white-space:pre-wrap;border:2px solid #fff;padding:8px;max-height:180px;overflow:auto;">${escapeHtml(lastGameSummary)}</pre>
+
+      <button onclick="copyGameSummary()">COPY SUMMARY</button>
+      <button onclick="startGame()">RESTART</button>
+      <button onclick="menu()">MAIN MENU</button>
+      `,
+      false
+    );
+  }
+
+  /* ==========================================================================
+     RECORDS / SUMMARY
+     ========================================================================== */
+
+  function updateRecords(won) {
+    const recordKey = getRecordKeyForCurrentMode();
+    const record = records[recordKey] || {};
+
+    if (mode === "sprint") {
+      if (won && (!record.bestTime || elapsedTime < record.bestTime)) {
+        record.bestTime = elapsedTime;
+      }
+    } else if (mode === "garbage") {
+      if (
+        !record.bestSurvivalTime ||
+        elapsedTime > record.bestSurvivalTime
+      ) {
+        record.bestSurvivalTime = elapsedTime;
+      }
+
+      record.bestGarbageAttacks = Math.max(
+        record.bestGarbageAttacks || 0,
+        garbageAttacksSurvived
+      );
+
+      record.bestScore = Math.max(record.bestScore || 0, score);
+    } else {
+      record.bestScore = Math.max(record.bestScore || 0, score);
+    }
+
+    const seconds = Math.max(1, elapsedTime) / 1000;
+    const pps = piecesPlaced / seconds;
+
+    record.bestLines = Math.max(record.bestLines || 0, lines);
+    record.bestPps = Math.max(record.bestPps || 0, Number(pps.toFixed(2)));
+    record.maxCombo = Math.max(record.maxCombo || 0, maxCombo);
+    record.bestTetrises = Math.max(record.bestTetrises || 0, tetrises);
+    record.bestPerfectClears = Math.max(
+      record.bestPerfectClears || 0,
+      perfectClears
+    );
+
+    records[recordKey] = record;
+    saveJson("tetrisDeluxeRecords", records);
+  }
+
+  function buildGameSummary(won) {
+    const seconds = Math.max(1, elapsedTime) / 1000;
+    const pps = piecesPlaced / seconds;
+    const kpp = inputCount / Math.max(1, piecesPlaced);
+
+    const modeName =
+      mode === "garbage"
+        ? "Garbage " + String(config.garbagePreset || "normal").toUpperCase()
+        : mode.toUpperCase();
+
+    const result = won ? "CLEAR" : "GAME OVER";
+
+    let summary =
+      "TETRIS DELUXE RUN SUMMARY\n" +
+      "Result: " + result + "\n" +
+      "Mode: " + modeName + "\n" +
+      "Score: " + score + "\n" +
+      "Time: " + formatTime(elapsedTime) + "\n" +
+      "Lines: " + lines + "\n" +
+      "Level: " + level + "\n" +
+      "Pieces: " + piecesPlaced + "\n" +
+      "PPS: " + pps.toFixed(2) + "\n" +
+      "KPP: " + kpp.toFixed(2) + "\n" +
+      "Tetrises: " + tetrises + "\n" +
+      "Perfect Clears: " + perfectClears + "\n" +
+      "Max Combo: " + maxCombo;
+
+    if (mode === "garbage") {
+      summary +=
+        "\nGarbage Attacks: " + garbageAttacksSurvived +
+        "\nGarbage Preset: " + String(config.garbagePreset || "normal").toUpperCase();
+    }
+
+    return summary;
+  }
+
+  window.copyGameSummary = function copyGameSummary() {
+    if (!lastGameSummary) {
+      return;
+    }
+
+    const temporaryBox = document.createElement("textarea");
+    temporaryBox.value = lastGameSummary;
+    document.body.appendChild(temporaryBox);
+    temporaryBox.select();
+    document.execCommand("copy");
+    document.body.removeChild(temporaryBox);
+
+    announce("SUMMARY COPIED", 900);
+  };
+
+  window.recordsMenu = function recordsMenu() {
+    let tableRows = "";
+
+    const recordRows = [
+      ["modern", "MODERN"],
+      ["classic", "CLASSIC"],
+      ["sprint", "SPRINT"],
+      ["ultra", "ULTRA"],
+      ["zen", "ZEN"],
+      ["garbage_easy", "GARBAGE EASY"],
+      ["garbage_normal", "GARBAGE NORMAL"],
+      ["garbage_hard", "GARBAGE HARD"],
+      ["garbage_custom", "GARBAGE CUSTOM"]
+    ];
+
+    for (const [recordKey, displayName] of recordRows) {
+      const record = records[recordKey] || {};
+
+      let best = "000000";
+
+      if (recordKey === "sprint") {
+        best = record.bestTime ? formatTime(record.bestTime) : "--:--";
+      } else if (recordKey.startsWith("garbage_")) {
+        best = record.bestSurvivalTime
+          ? formatTime(record.bestSurvivalTime)
+          : "--:--";
+      } else {
+        best = padNumber(record.bestScore || 0, 6);
+      }
+
+      tableRows += `
+        <tr>
+          <td>${displayName}</td>
+          <td>${best}</td>
+          <td>${record.bestLines || 0}</td>
+          <td>${record.bestPps || 0}</td>
+          <td>${record.maxCombo || 0}</td>
+        </tr>
+      `;
+    }
+
+    showOverlay(
+      `
+      <h1>RECORDS</h1>
+
+      <table class="records-table">
+        <tr>
+          <th>MODE</th>
+          <th>BEST</th>
+          <th>LINES</th>
+          <th>PPS</th>
+          <th>COMBO</th>
+        </tr>
+        ${tableRows}
+      </table>
+
+      <button onclick="menu()">BACK</button>
+      <button onclick="confirmResetRecords()">RESET RECORDS</button>
+      `,
+      false
+    );
+  };
+
+  window.confirmResetRecords = function confirmResetRecords() {
+    showOverlay(
+      `
+      <h1>RESET RECORDS?</h1>
+      <p class="danger">
+        This will delete all saved records for every mode.
+      </p>
+      <button onclick="resetRecords()">YES, RESET RECORDS</button>
+      <button onclick="recordsMenu()">NO, GO BACK</button>
+      `,
+      false
+    );
+  };
+
+  window.resetRecords = function resetRecords() {
+    records = {};
+    saveJson("tetrisDeluxeRecords", records);
+    window.recordsMenu();
+  };
+
+  window.resetCurrentModeRecord = function resetCurrentModeRecord() {
+    const recordKey = getRecordKeyForCurrentMode();
+    delete records[recordKey];
+    saveJson("tetrisDeluxeRecords", records);
+    recordsMenu();
+  };
+
+  /* ==========================================================================
+     MENU / MODE SETUP
+     ========================================================================== */
+
+  window.menu = function menu() {
+    stopMusic(true);
+
+    started = false;
+    paused = false;
+    gameOver = false;
+    confirmingRestart = false;
+
+    moveLeftHeld = false;
+    moveRightHeld = false;
+    softDropHeld = false;
+
+    showOverlay(
+      `
+      <h1>TETRIS DELUXE</h1>
+
+      <div class="row">
+        <select id="modeSelect">
+          <option value="modern">MODERN MARATHON</option>
+          <option value="classic">CLASSIC RANDOM</option>
+          <option value="sprint">SPRINT 40L</option>
+          <option value="ultra">ULTRA 2:00</option>
+          <option value="zen">ZEN PRACTICE</option>
+          <option value="garbage">GARBAGE SURVIVAL</option>
+        </select>
+
+        <button onclick="openModeSetup()">START</button>
+        <button onclick="settings()">SETTINGS</button>
+        <button onclick="recordsMenu()">RECORDS</button>
+        <button onclick="controlsMenu()">CONTROLS</button>
+        ${config.debugMode ? '<button onclick="debugMenu()">DEBUG</button>' : ''}
+      </div>
+
+      <p>
+        Default controls:<br>
+        ← → Move |
+        ↓ Soft Drop |
+        Space / Enter Hard Drop<br>
+        ↑ / X Rotate CW |
+        Z Rotate CCW |
+        C Hold<br>
+        P Pause |
+        R Restart |
+        M Music |
+        N SFX |
+        G Ghost
+      </p>
+
+      <p class="hint">
+        Garbage Survival preset:
+        <strong>${String(config.garbagePreset || "normal").toUpperCase()}</strong>.
+        Extended garbage tuning remains available in Settings.
+      </p>
+
+      <p class="hint">
+        iPhone / iPad: open this file from a hosted HTTPS page in Safari,
+        then Share → Add to Home Screen for an app-like full-screen experience.
+      </p>
+      `,
+      false
+    );
+
+    const modeSelect = $("modeSelect");
+
+    if (modeSelect) {
+      modeSelect.value = mode;
+    }
+
+    applyAccessibilitySettings();
+  };
+
+  window.openModeSetup = function openModeSetup() {
+    const modeSelect = $("modeSelect");
+
+    if (modeSelect) {
+      mode = modeSelect.value;
+      localStorage.setItem("tetrisDeluxeMode", mode);
+    }
+
+    let setupHtml = "";
+
+    if (mode === "garbage") {
+      setupHtml = `
+        <h1>GARBAGE SURVIVAL</h1>
+
+        <p class="hint">
+          Survive as long as possible. Garbage builds on a timer.
+          Clearing lines cancels pending garbage before it hits.
+        </p>
+
+        <div class="settings-grid">
+          <label>
+            Difficulty
+            <select id="quickGarbagePreset" onchange="previewQuickGarbagePreset()">
+              <option value="easy">Easy</option>
+              <option value="normal">Normal</option>
+              <option value="hard">Hard</option>
+              <option value="custom">Custom</option>
+            </select>
+          </label>
+
+          <div>
+            <strong>Preset Info</strong><br>
+            <span id="quickGarbageInfo" class="hint"></span>
+          </div>
+        </div>
+
+        <p>
+          <button onclick="startGame()">START</button>
+          <button onclick="applyDefaultsForSelectedMode()">APPLY MODE DEFAULTS</button>
+          <button onclick="settings()">ADVANCED SETTINGS</button>
+          <button onclick="menu()">BACK</button>
+        </p>
+      `;
+    } else if (mode === "sprint") {
+      setupHtml = `
+        <h1>SPRINT 40L</h1>
+
+        <p class="hint">
+          Clear 40 lines as fast as possible.
+          Your best time is saved separately from score records.
+        </p>
+
+        <p>
+          <button onclick="startGame()">START</button>
+          <button onclick="applyDefaultsForSelectedMode()">APPLY MODE DEFAULTS</button>
+          <button onclick="menu()">BACK</button>
+        </p>
+      `;
+    } else if (mode === "ultra") {
+      setupHtml = `
+        <h1>ULTRA 2:00</h1>
+
+        <p class="hint">
+          Score as much as possible in two minutes.
+          Start Level: ${config.startLevel}<br>
+          Effective Lock Delay Now: ${getEffectiveLockDelay()}ms
+        </p>
+
+        <p>
+          <button onclick="startGame()">START</button>
+          <button onclick="applyDefaultsForSelectedMode()">APPLY MODE DEFAULTS</button>
+          <button onclick="menu()">BACK</button>
+        </p>
+      `;
+    } else if (mode === "classic") {
+      setupHtml = `
+        <h1>CLASSIC RANDOM</h1>
+
+        <p class="hint">
+          Old-school randomizer. Optional authentic rules are available in Settings.<br>
+          Start Level: ${config.startLevel}<br>
+          Effective Lock Delay Now: ${getEffectiveLockDelay()}ms<br>
+          Authentic Rules: ${config.classicAuthentic ? "ON" : "OFF"}
+        </p>
+
+        <p>
+          <button onclick="startGame()">START</button>
+          <button onclick="applyDefaultsForSelectedMode()">APPLY MODE DEFAULTS</button>
+          <button onclick="settings()">SETTINGS</button>
+          <button onclick="menu()">BACK</button>
+        </p>
+      `;
+    } else if (mode === "zen") {
+      setupHtml = `
+        <h1>ZEN PRACTICE</h1>
+
+        <p class="hint">
+          Practice freely. Use Zen Tools from the pause menu.<br>
+          Gravity: ${config.zenGravityEnabled ? "ON" : "OFF"} |
+          Infinite Lock: ${config.zenInfiniteLock ? "ON" : "OFF"}
+        </p>
+
+        <p>
+          <button onclick="startGame()">START</button>
+          <button onclick="applyDefaultsForSelectedMode()">APPLY MODE DEFAULTS</button>
+          <button onclick="settings()">SETTINGS</button>
+          <button onclick="menu()">BACK</button>
+        </p>
+      `;
+    } else {
+      setupHtml = `
+        <h1>MODERN MARATHON</h1>
+
+        <p class="hint">
+          Standard modern marathon with hold, ghost, next queue, combos, B2B,
+          scoring, and level speed-up.<br>
+          Start Level: ${config.startLevel}<br>
+          Effective Lock Delay Now: ${getEffectiveLockDelay()}ms
+        </p>
+
+        <p>
+          <button onclick="startGame()">START</button>
+          <button onclick="applyDefaultsForSelectedMode()">APPLY MODE DEFAULTS</button>
+          <button onclick="settings()">SETTINGS</button>
+          <button onclick="menu()">BACK</button>
+        </p>
+      `;
+    }
+
+    showOverlay(setupHtml, false);
+
+    if (mode === "garbage") {
+      const presetSelect = $("quickGarbagePreset");
+
+      if (presetSelect) {
+        presetSelect.value = config.garbagePreset || "normal";
+      }
+
+      updateQuickGarbageInfo();
+    }
+  };
+
+  window.previewQuickGarbagePreset = function previewQuickGarbagePreset() {
+    const presetSelect = $("quickGarbagePreset");
+
+    if (!presetSelect) {
+      return;
+    }
+
+    config.garbagePreset = presetSelect.value || "normal";
+
+    if (config.garbagePreset !== "custom") {
+      applyGarbagePreset(config.garbagePreset);
+    }
+
+    savePreferences();
+    updateQuickGarbageInfo();
+  };
+
+  function updateQuickGarbageInfo() {
+    const info = $("quickGarbageInfo");
+
+    if (!info) {
+      return;
+    }
+
+    const presetName = config.garbagePreset || "normal";
+
+    info.textContent =
+      "Preset: " +
+      presetName.toUpperCase() +
+      " | Attack: " +
+      config.garbageLinesPerAttack +
+      " line(s)" +
+      " | First: " +
+      (config.garbageBaseInterval / 1000).toFixed(1) +
+      "s" +
+      " | Minimum: " +
+      (config.garbageMinimumInterval / 1000).toFixed(1) +
+      "s" +
+      " | Start Level: " +
+      config.startLevel +
+      " | Lock: " +
+      getEffectiveLockDelay() +
+      "ms";
+  }
+
+  window.controlsMenu = function controlsMenu() {
+    showOverlay(
+      `
+      <h1>CONTROLS</h1>
+
+      <p>
+        <strong>Movement</strong><br>
+        Move Left: ${escapeHtml(keys.left)}<br>
+        Move Right: ${escapeHtml(keys.right)}<br>
+        Soft Drop: ${escapeHtml(keys.softDrop)}<br>
+        Hard Drop: ${keys.hardDrop === " " ? "Space" : escapeHtml(keys.hardDrop)}
+      </p>
+
+      <p>
+        <strong>Rotation</strong><br>
+        Rotate CW: ${escapeHtml(keys.rotateCw)} / ${escapeHtml(keys.rotateCwAlt)}<br>
+        Rotate CCW: ${escapeHtml(keys.rotateCcw)}
+      </p>
+
+      <p>
+        <strong>Utility</strong><br>
+        Hold: ${escapeHtml(keys.hold)}<br>
+        Pause: ${escapeHtml(keys.pause)}<br>
+        Restart: ${escapeHtml(keys.restart)}<br>
+        Toggle Music: ${escapeHtml(keys.music)}<br>
+        Toggle SFX: ${escapeHtml(keys.sfx)}<br>
+        Toggle Ghost: ${escapeHtml(keys.ghost)}<br>
+        Zen Clear: ${escapeHtml(keys.zenClear)}
+      </p>
+
+      <p class="hint">
+        All keybinds can be changed in Settings.
+      </p>
+
+      <button onclick="menu()">BACK</button>
+      `,
+      false
+    );
+  };
+
+  /* ==========================================================================
+     SETTINGS
+     ========================================================================== */
+
+  window.settings = function settings() {
+    showOverlay(
+      `
+      <h1>SETTINGS</h1>
+
+      <h2>Timing</h2>
+      <div class="settings-grid">
+        <label>DAS <input id="settingDas" value="${config.das}" size="6"></label>
+        <label>ARR <input id="settingArr" value="${config.arr}" size="6"></label>
+
+        <label>Base Lock Delay <input id="settingLockDelay" value="${config.lockDelay}" size="6"></label>
+
+        <label>
+          Scale Lock Delay
+          <input id="settingLockScale" type="checkbox" ${config.lockDelayScaleWithLevel ? "checked" : ""}>
+        </label>
+
+        <label>
+          Lock Bonus / Level
+          <input id="settingLockLevelBonus" value="${config.lockDelayLevelBonus}" size="6">
+        </label>
+
+        <label>
+          Min Lock Delay
+          <input id="settingMinLockDelay" value="${config.minimumLockDelay}" size="6">
+        </label>
+
+        <label>
+          Max Lock Delay
+          <input id="settingMaxLockDelay" value="${config.maximumLockDelay}" size="6">
+        </label>
+
+        <label>Lock Reset Limit <input id="settingLockResetLimit" value="${config.lockResetLimit}" size="6"></label>
+
+        <label>ARE <input id="settingAre" value="${config.are}" size="6"></label>
+        <label>Input Buffer <input id="settingInputBuffer" value="${config.inputBuffer}" size="6"></label>
+        <label>Soft Drop Repeat <input id="settingSoftDropRepeat" value="${config.softDropRepeat}" size="6"></label>
+        <label>Start Level <input id="settingStartLevel" value="${config.startLevel}" size="6"></label>
+      </div>
+
+      <h2>Classic Mode</h2>
+      <div class="settings-grid">
+        <label>
+          Authentic Classic Rules
+          <input id="settingClassicAuthentic" type="checkbox" ${config.classicAuthentic ? "checked" : ""}>
+        </label>
+
+        <label>
+          Disable Hard Drop
+          <input id="settingClassicDisableHardDrop" type="checkbox" ${config.classicDisableHardDrop ? "checked" : ""}>
+        </label>
+
+        <label>
+          Disable Hold
+          <input id="settingClassicDisableHold" type="checkbox" ${config.classicDisableHold ? "checked" : ""}>
+        </label>
+
+        <label>
+          Disable Ghost
+          <input id="settingClassicDisableGhost" type="checkbox" ${config.classicDisableGhost ? "checked" : ""}>
+        </label>
+
+        <label>
+          Limited Kicks
+          <input id="settingClassicLimitedKicks" type="checkbox" ${config.classicLimitedKicks ? "checked" : ""}>
+        </label>
+      </div>
+
+      <h2>Zen Practice</h2>
+      <div class="settings-grid">
+        <label>
+          Gravity Enabled
+          <input id="settingZenGravityEnabled" type="checkbox" ${config.zenGravityEnabled ? "checked" : ""}>
+        </label>
+
+        <label>
+          Infinite Lock Delay
+          <input id="settingZenInfiniteLock" type="checkbox" ${config.zenInfiniteLock ? "checked" : ""}>
+        </label>
+
+        <label>
+          Undo Limit
+          <input id="settingZenUndoLimit" value="${config.zenUndoLimit}" size="6">
+        </label>
+      </div>
+
+      <h2>Garbage Survival</h2>
+      <div class="settings-grid">
+        <label>
+          Difficulty Preset
+          <select id="settingGarbagePreset" onchange="previewGarbagePreset()">
+            <option value="easy">Easy</option>
+            <option value="normal">Normal</option>
+            <option value="hard">Hard</option>
+            <option value="custom">Custom</option>
+          </select>
+        </label>
+
+        <label>
+          Base Interval MS
+          <input id="settingGarbageBase" value="${config.garbageBaseInterval}" size="6" oninput="markGarbageCustom()">
+        </label>
+
+        <label>
+          Minimum Interval MS
+          <input id="settingGarbageMin" value="${config.garbageMinimumInterval}" size="6" oninput="markGarbageCustom()">
+        </label>
+
+        <label>
+          Level Speedup MS
+          <input id="settingGarbageSpeedup" value="${config.garbageLevelSpeedup}" size="6" oninput="markGarbageCustom()">
+        </label>
+
+        <label>
+          Lines Per Attack
+          <input id="settingGarbageLines" value="${config.garbageLinesPerAttack}" size="6" oninput="markGarbageCustom()">
+        </label>
+
+        <label>
+          Max Pending
+          <input id="settingGarbageMaxPending" value="${config.garbageMaxPending}" size="6" oninput="markGarbageCustom()">
+        </label>
+
+        <label>
+          Apply On Spawn
+          <input id="settingGarbageApplyOnSpawn" type="checkbox" ${config.garbageApplyOnSpawn ? "checked" : ""} onchange="markGarbageCustom()">
+        </label>
+      </div>
+
+      <h2>Display / Audio / Debug</h2>
+      <div class="settings-grid">
+        <label>
+          Palette
+          <select id="settingPalette">
+            <option value="default">Default</option>
+            <option value="colorblind">Colorblind</option>
+            <option value="contrast">High Contrast</option>
+          </select>
+        </label>
+
+        <label>
+          Larger UI
+          <input id="settingLargeUi" type="checkbox" ${config.largeUi ? "checked" : ""}>
+        </label>
+
+        <label>
+          Mobile Controls
+          <select id="settingMobileControlSize">
+            <option value="compact">Compact</option>
+            <option value="normal">Normal</option>
+            <option value="large">Large</option>
+          </select>
+        </label>
+
+        <label>
+          Confirm Restart
+          <input id="settingRestartConfirm" type="checkbox" ${config.restartConfirm ? "checked" : ""}>
+        </label>
+
+        <label>
+          Resume Countdown
+          <select id="settingResumeCountdown">
+            <option value="notice">Notice Panel</option>
+            <option value="overlay">Fullscreen</option>
+            <option value="off">Off</option>
+          </select>
+        </label>
+
+        <label>
+          Danger Row
+          <input id="settingDangerRow" value="${config.dangerRowThreshold}" size="6">
+        </label>
+
+        <label>
+          Garbage Meter
+          <input id="settingGarbageMeter" type="checkbox" ${config.garbageMeterEnabled ? "checked" : ""}>
+        </label>
+
+        <label>
+          Music
+          <input id="settingMusic" type="checkbox" ${musicEnabled ? "checked" : ""}>
+        </label>
+
+        <label>
+          SFX
+          <input id="settingSfx" type="checkbox" ${sfxEnabled ? "checked" : ""}>
+        </label>
+
+        <label>
+          Ghost Piece
+          <input id="settingGhost" type="checkbox" ${ghostEnabled ? "checked" : ""}>
+        </label>
+
+        <label>
+          Music Volume
+          <input id="settingMusicVolume" type="range" min="0" max="1" step="0.05" value="${config.musicVolume}">
+        </label>
+
+        <label>
+          SFX Volume
+          <input id="settingSfxVolume" type="range" min="0" max="1" step="0.05" value="${config.sfxVolume}">
+        </label>
+
+        <label>
+          Debug Mode
+          <input id="settingDebugMode" type="checkbox" ${config.debugMode ? "checked" : ""}>
+        </label>
+      </div>
+
+      <h2>Keybinds</h2>
+      <div class="settings-grid">
+        ${createKeybindInputs()}
+      </div>
+
+      <h2>Save Data</h2>
+      <div class="row">
+        <button onclick="exportSaveData()">EXPORT SAVE DATA</button>
+        <button onclick="importSaveData()">IMPORT SAVE DATA</button>
+        <button onclick="confirmResetSettingsOnly()">RESET SETTINGS</button>
+      </div>
+
+      <p class="hint">
+        Effective lock delay currently:
+        <strong>${getEffectiveLockDelay()}ms</strong>.<br>
+        Easy / Normal / Hard fill the advanced garbage settings automatically.
+        Editing any advanced garbage value switches the preset to Custom.
+      </p>
+
+      <button onclick="saveSettings()">SAVE</button>
+      <button onclick="menu()">BACK</button>
+      `,
+      false
+    );
+
+    $("settingPalette").value = config.palette;
+    $("settingMobileControlSize").value = config.mobileControlSize || "normal";
+    $("settingResumeCountdown").value = config.resumeCountdownStyle || "notice";
+    $("settingGarbagePreset").value = config.garbagePreset || "normal";
+  };
+
+  function createKeybindInputs() {
+    const labels = {
+      left: "Move Left",
+      right: "Move Right",
+      softDrop: "Soft Drop",
+      rotateCw: "Rotate CW",
+      rotateCwAlt: "Rotate CW Alt",
+      rotateCcw: "Rotate CCW",
+      hardDrop: "Hard Drop",
+      hardDropAlt: "Hard Drop Alt",
+      hold: "Hold",
+      pause: "Pause",
+      restart: "Restart",
+      music: "Toggle Music",
+      sfx: "Toggle SFX",
+      ghost: "Toggle Ghost",
+      zenClear: "Zen Clear"
+    };
+
+    return Object.keys(keys)
+      .map(keyName => {
+        const displayValue = keys[keyName] === " "
+          ? "Space"
+          : keys[keyName];
+
+        return `
+          <label>
+            ${labels[keyName] || keyName}
+            <input id="key_${keyName}" value="${escapeHtml(displayValue)}" size="12">
+          </label>
+        `;
+      })
+      .join("");
+  }
+
+  window.previewGarbagePreset = function previewGarbagePreset() {
+    const presetName = $("settingGarbagePreset").value;
+    const preset = GARBAGE_PRESETS[presetName];
+
+    if (!preset) {
+      return;
+    }
+
+    $("settingGarbageBase").value = preset.garbageBaseInterval;
+    $("settingGarbageMin").value = preset.garbageMinimumInterval;
+    $("settingGarbageSpeedup").value = preset.garbageLevelSpeedup;
+    $("settingGarbageLines").value = preset.garbageLinesPerAttack;
+    $("settingGarbageMaxPending").value = preset.garbageMaxPending;
+    $("settingGarbageApplyOnSpawn").checked = preset.garbageApplyOnSpawn;
+  };
+
+  window.markGarbageCustom = function markGarbageCustom() {
+    const presetSelect = $("settingGarbagePreset");
+
+    if (presetSelect) {
+      presetSelect.value = "custom";
+    }
+  };
+
+  window.saveSettings = function saveSettings() {
+    config.das = readNumber("settingDas", DEFAULT_CONFIG.das);
+    config.arr = Math.max(1, readNumber("settingArr", DEFAULT_CONFIG.arr));
+
+    config.lockDelay = readNumber("settingLockDelay", DEFAULT_CONFIG.lockDelay);
+    config.lockDelayScaleWithLevel = $("settingLockScale").checked;
+    config.lockDelayLevelBonus = readNumber(
+      "settingLockLevelBonus",
+      DEFAULT_CONFIG.lockDelayLevelBonus
+    );
+    config.minimumLockDelay = readNumber(
+      "settingMinLockDelay",
+      DEFAULT_CONFIG.minimumLockDelay
+    );
+    config.maximumLockDelay = readNumber(
+      "settingMaxLockDelay",
+      DEFAULT_CONFIG.maximumLockDelay
+    );
+
+    if (config.maximumLockDelay < config.minimumLockDelay) {
+      config.maximumLockDelay = config.minimumLockDelay;
+    }
+
+    config.lockResetLimit = clampNumber(
+      readNumber("settingLockResetLimit", DEFAULT_CONFIG.lockResetLimit),
+      1,
+      99
+    );
+    config.lockDelayTuningVersion = DEFAULT_CONFIG.lockDelayTuningVersion;
+
+    config.are = readNumber("settingAre", DEFAULT_CONFIG.are);
+    config.inputBuffer = readNumber("settingInputBuffer", DEFAULT_CONFIG.inputBuffer);
+    config.softDropRepeat = Math.max(1, readNumber("settingSoftDropRepeat", DEFAULT_CONFIG.softDropRepeat));
+
+    config.startLevel = clampNumber(
+      readNumber("settingStartLevel", DEFAULT_CONFIG.startLevel),
+      1,
+      GRAVITY_INTERVALS.length
+    );
+
+    config.classicAuthentic = $("settingClassicAuthentic").checked;
+    config.classicDisableHardDrop = $("settingClassicDisableHardDrop").checked;
+    config.classicDisableHold = $("settingClassicDisableHold").checked;
+    config.classicDisableGhost = $("settingClassicDisableGhost").checked;
+    config.classicLimitedKicks = $("settingClassicLimitedKicks").checked;
+
+    config.zenGravityEnabled = $("settingZenGravityEnabled").checked;
+    config.zenInfiniteLock = $("settingZenInfiniteLock").checked;
+
+    config.zenUndoLimit = clampNumber(
+      readNumber("settingZenUndoLimit", DEFAULT_CONFIG.zenUndoLimit),
+      1,
+      200
+    );
+
+    config.garbagePreset = $("settingGarbagePreset").value || "normal";
+    config.garbageBaseInterval = readNumber("settingGarbageBase", DEFAULT_CONFIG.garbageBaseInterval);
+    config.garbageMinimumInterval = readNumber("settingGarbageMin", DEFAULT_CONFIG.garbageMinimumInterval);
+    config.garbageLevelSpeedup = readNumber("settingGarbageSpeedup", DEFAULT_CONFIG.garbageLevelSpeedup);
+    config.garbageLinesPerAttack = readNumber("settingGarbageLines", DEFAULT_CONFIG.garbageLinesPerAttack);
+    config.garbageMaxPending = readNumber("settingGarbageMaxPending", DEFAULT_CONFIG.garbageMaxPending);
+    config.garbageApplyOnSpawn = $("settingGarbageApplyOnSpawn").checked;
+
+    config.palette = $("settingPalette").value || DEFAULT_CONFIG.palette;
+    config.largeUi = $("settingLargeUi").checked;
+    config.mobileControlSize = $("settingMobileControlSize").value || DEFAULT_CONFIG.mobileControlSize;
+    config.restartConfirm = $("settingRestartConfirm").checked;
+    config.resumeCountdownStyle = $("settingResumeCountdown").value || "notice";
+
+    config.dangerRowThreshold = clampNumber(
+      readNumber("settingDangerRow", DEFAULT_CONFIG.dangerRowThreshold),
+      0,
+      BOARD_HEIGHT - 1
+    );
+
+    config.garbageMeterEnabled = $("settingGarbageMeter").checked;
+
+    config.musicVolume = readFloat("settingMusicVolume", DEFAULT_CONFIG.musicVolume);
+    config.sfxVolume = readFloat("settingSfxVolume", DEFAULT_CONFIG.sfxVolume);
+
+    config.debugMode = $("settingDebugMode").checked;
+
+    musicEnabled = $("settingMusic").checked;
+    sfxEnabled = $("settingSfx").checked;
+    ghostEnabled = $("settingGhost").checked;
+
+    for (const keyName of Object.keys(keys)) {
+      const input = $("key_" + keyName);
+
+      if (!input) {
+        continue;
+      }
+
+      let value = input.value.trim();
+
+      if (value.toLowerCase() === "space") {
+        value = " ";
+      }
+
+      if (value) {
+        keys[keyName] = value;
+      }
+    }
+
+    savePreferences();
+    applyAccessibilitySettings();
+    window.menu();
+  };
+
+  function readNumber(id, fallback) {
+    const input = $(id);
+
+    if (!input) {
+      return fallback;
+    }
+
+    const value = Number(input.value);
+
+    if (Number.isFinite(value) && value >= 0) {
+      return value;
+    }
+
+    return fallback;
+  }
+
+  function readFloat(id, fallback) {
+    const input = $(id);
+
+    if (!input) {
+      return fallback;
+    }
+
+    const value = Number(input.value);
+
+    if (Number.isFinite(value)) {
+      return Math.max(0, Math.min(1, value));
+    }
+
+    return fallback;
+  }
+
+  function savePreferences() {
+    saveJson("tetrisDeluxeConfig", config);
+    saveJson("tetrisDeluxeKeys", keys);
+
+    localStorage.setItem("tetrisDeluxeMode", mode);
+    localStorage.setItem("tetrisMusic", musicEnabled ? "1" : "0");
+    localStorage.setItem("tetrisSfx", sfxEnabled ? "1" : "0");
+    localStorage.setItem("tetrisGhost", ghostEnabled ? "1" : "0");
+  }
+
+  function applyAccessibilitySettings() {
+    document.body.classList.toggle("large-ui", !!config.largeUi);
+
+    document.body.classList.remove(
+      "mobile-controls-compact",
+      "mobile-controls-normal",
+      "mobile-controls-large"
+    );
+
+    const mobileSize = ["compact", "normal", "large"].includes(config.mobileControlSize)
+      ? config.mobileControlSize
+      : "normal";
+
+    document.body.classList.add("mobile-controls-" + mobileSize);
+  }
+
+  /* ==========================================================================
+     SAVE DATA IMPORT / EXPORT / RESET CONFIRMATIONS
+     ========================================================================== */
+
+  window.exportSaveData = function exportSaveData() {
+    const saveData = {
+      config,
+      keys,
+      records,
+      mode,
+      musicEnabled,
+      sfxEnabled,
+      ghostEnabled,
+      exportedAt: new Date().toISOString()
+    };
+
+    const text = JSON.stringify(saveData, null, 2);
+
+    showOverlay(
+      `
+      <h1>EXPORT SAVE DATA</h1>
+      <p class="hint">Copy this text and save it somewhere safe.</p>
+      <textarea id="exportBox" style="width:100%;height:260px;">${escapeHtml(text)}</textarea>
+      <p>
+        <button onclick="copyExportData()">COPY</button>
+        <button onclick="settings()">BACK</button>
+      </p>
+      `,
+      false
+    );
+  };
+
+  window.copyExportData = function copyExportData() {
+    const box = $("exportBox");
+
+    if (!box) {
+      return;
+    }
+
+    box.select();
+    document.execCommand("copy");
+  };
+
+  window.importSaveData = function importSaveData() {
+    showOverlay(
+      `
+      <h1>IMPORT SAVE DATA</h1>
+      <p class="hint">Paste exported save data below.</p>
+      <textarea id="importBox" style="width:100%;height:260px;"></textarea>
+      <p>
+        <button onclick="confirmImportSaveData()">IMPORT</button>
+        <button onclick="settings()">BACK</button>
+      </p>
+      `,
+      false
+    );
+  };
+
+  window.confirmImportSaveData = function confirmImportSaveData() {
+    const box = $("importBox");
+
+    if (!box) {
+      return;
+    }
+
+    try {
+      const imported = JSON.parse(box.value);
+
+      if (imported.config) {
+        config = Object.assign({}, DEFAULT_CONFIG, imported.config);
+      }
+
+      if (imported.keys) {
+        keys = Object.assign({}, DEFAULT_KEYS, imported.keys);
+      }
+
+      if (imported.records) {
+        records = imported.records;
+      }
+
+      if (imported.mode) {
+        mode = imported.mode;
+      }
+
+      if (typeof imported.musicEnabled === "boolean") {
+        musicEnabled = imported.musicEnabled;
+      }
+
+      if (typeof imported.sfxEnabled === "boolean") {
+        sfxEnabled = imported.sfxEnabled;
+      }
+
+      if (typeof imported.ghostEnabled === "boolean") {
+        ghostEnabled = imported.ghostEnabled;
+      }
+
+      savePreferences();
+      saveJson("tetrisDeluxeRecords", records);
+
+      showOverlay(
+        `
+        <h1>IMPORT COMPLETE</h1>
+        <p class="good">Save data imported successfully.</p>
+        <button onclick="menu()">MAIN MENU</button>
+        `,
+        false
+      );
+    } catch (error) {
+      showOverlay(
+        `
+        <h1>IMPORT FAILED</h1>
+        <p class="danger">That save data could not be read.</p>
+        <button onclick="importSaveData()">TRY AGAIN</button>
+        <button onclick="settings()">BACK</button>
+        `,
+        false
+      );
+    }
+  };
+
+  window.confirmResetSettingsOnly = function confirmResetSettingsOnly() {
+    showOverlay(
+      `
+      <h1>RESET SETTINGS?</h1>
+      <p class="danger">
+        This will restore all settings and controls to defaults.
+        Your records will not be changed.
+      </p>
+      <button onclick="resetSettingsOnly()">YES, RESET SETTINGS</button>
+      <button onclick="settings()">NO, GO BACK</button>
+      `,
+      false
+    );
+  };
+
+  window.resetSettingsOnly = function resetSettingsOnly() {
+    config = Object.assign({}, DEFAULT_CONFIG);
+    keys = Object.assign({}, DEFAULT_KEYS);
+
+    zenHistory = [];
+    lastGameSummary = "";
+
+    savePreferences();
+    applyAccessibilitySettings();
+
+    showOverlay(
+      `
+      <h1>SETTINGS RESET</h1>
+      <p>Settings have been restored to defaults. Records were not changed.</p>
+      <button onclick="settings()">BACK</button>
+      `,
+      false
+    );
+  };
+
+  /* ==========================================================================
+     DEBUG / TEST MODE
+     ========================================================================== */
+
+  window.debugMenu = function debugMenu() {
+    if (!config.debugMode) {
+      return;
+    }
+
+    showOverlay(
+      `
+      <h1>DEBUG MODE</h1>
+
+      <p class="hint">
+        Debug tools are only visible when Debug Mode is enabled in Settings.
+      </p>
+
+      <div class="row">
+        <button onclick="debugStartZen()">START ZEN TEST</button>
+        <button onclick="debugAddGarbage()">ADD GARBAGE</button>
+        <button onclick="debugFillBottom()">FILL BOTTOM</button>
+        <button onclick="debugForceClear()">FORCE CLEAR</button>
+        <button onclick="debugDangerStack()">DANGER STACK</button>
+        <button onclick="debugGameOver()">FORCE GAME OVER</button>
+      </div>
+
+      <h2>Spawn Piece</h2>
+      <div class="row">
+        <button onclick="debugSpawnPiece('I')">I</button>
+        <button onclick="debugSpawnPiece('O')">O</button>
+        <button onclick="debugSpawnPiece('T')">T</button>
+        <button onclick="debugSpawnPiece('S')">S</button>
+        <button onclick="debugSpawnPiece('Z')">Z</button>
+        <button onclick="debugSpawnPiece('J')">J</button>
+        <button onclick="debugSpawnPiece('L')">L</button>
+      </div>
+
+      <h2>Set Level</h2>
+      <p>
+        <input id="debugLevelInput" value="${level}" size="6">
+        <button onclick="debugSetLevel()">SET LEVEL</button>
+      </p>
+
+      <p>
+        Started: ${started ? "YES" : "NO"}<br>
+        Mode: ${escapeHtml(mode)}<br>
+        Lines: ${lines}<br>
+        Level: ${level}<br>
+        Effective Lock Delay: ${getEffectiveLockDelay()}ms<br>
+        Pieces: ${piecesPlaced}<br>
+        Garbage Pending: ${garbagePending}
+      </p>
+
+      <button onclick="${paused ? "showPauseMenu()" : "menu()"}">BACK</button>
+      `,
+      true
+    );
+  };
+
+  window.debugStartZen = function debugStartZen() {
+    if (!config.debugMode) {
+      return;
+    }
+
+    mode = "zen";
+    window.startGame();
+  };
+
+  window.debugAddGarbage = function debugAddGarbage() {
+    if (!config.debugMode || !started) {
+      return;
+    }
+
+    applyGarbageLines(1);
+    announce("DEBUG GARBAGE", 800);
+    debugMenu();
+  };
+
+  window.debugFillBottom = function debugFillBottom() {
+    if (!config.debugMode || !started) {
+      return;
+    }
+
+    const hole = Math.floor(Math.random() * BOARD_WIDTH);
+    board[BOARD_HEIGHT - 1] = Array.from(
+      { length: BOARD_WIDTH },
+      (_, index) => index === hole ? null : "G"
+    );
+
+    announce("DEBUG FILL", 800);
+    debugMenu();
+  };
+
+  window.debugForceClear = function debugForceClear() {
+    if (!config.debugMode || !started) {
+      return;
+    }
+
+    board[BOARD_HEIGHT - 1] = Array(BOARD_WIDTH).fill("G");
+    checkForLineClears("");
+    announce("DEBUG CLEAR", 800);
+    hideOverlay();
+  };
+
+  window.debugDangerStack = function debugDangerStack() {
+    if (!config.debugMode || !started) {
+      return;
+    }
+
+    for (let row = 6; row < BOARD_HEIGHT; row++) {
+      board[row] = Array.from(
+        { length: BOARD_WIDTH },
+        (_, index) => index === 4 ? null : "G"
+      );
+    }
+
+    announce("DEBUG DANGER", 800);
+    debugMenu();
+  };
+
+  window.debugGameOver = function debugGameOver() {
+    if (!config.debugMode || !started) {
+      return;
+    }
+
+    endGame(false);
+  };
+
+  window.debugSpawnPiece = function debugSpawnPiece(type) {
+    if (!config.debugMode || !started) {
+      return;
+    }
+
+    activePiece = createPiece(type);
+    spawnPending = false;
+    spawnTimer = 0;
+    announce("DEBUG " + type, 800);
+    hideOverlay();
+  };
+
+  window.debugSetLevel = function debugSetLevel() {
+    if (!config.debugMode || !started) {
+      return;
+    }
+
+    const input = $("debugLevelInput");
+    const nextLevel = clampNumber(Number(input.value) || 1, 1, 99);
+
+    level = nextLevel;
+    announce("DEBUG LEVEL " + level, 800);
+    debugMenu();
+  };
+
+  /* ==========================================================================
+     OVERLAY HELPERS
+     ========================================================================== */
+
+  function showOverlay(html, dim) {
+    const overlay = $("overlay");
+    const box = $("box");
+
+    overlay.className = dim ? "dim" : "";
+    overlay.style.display = "flex";
+    box.innerHTML = html;
+  }
+
+  function hideOverlay() {
+    const overlay = $("overlay");
+
+    overlay.className = "";
+    overlay.style.display = "none";
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  /* ==========================================================================
+     INPUT HANDLING
+     ========================================================================== */
+
+  function performAction(action) {
+    if (action === "left") {
+      moveHorizontal(-1);
+      return;
+    }
+
+    if (action === "right") {
+      moveHorizontal(1);
+      return;
+    }
+
+    if (action === "softDrop") {
+      softDrop(true);
+      return;
+    }
+
+    if (action === "rotateCw") {
+      rotatePiece(1);
+      return;
+    }
+
+    if (action === "rotateCcw") {
+      rotatePiece(-1);
+      return;
+    }
+
+    if (action === "hardDrop") {
+      hardDrop();
+      return;
+    }
+
+    if (action === "hold") {
+      holdPiece();
+      return;
+    }
+  }
+
+  window.act = function act(action) {
+    performAction(action);
+  };
+
+  function keyMatches(eventKey, bindingName) {
+    const binding = keys[bindingName];
+
+    if (eventKey === binding) {
+      return true;
+    }
+
+    return eventKey.toLowerCase() === String(binding).toLowerCase();
+  }
+
+  function shouldPreventDefault(eventKey) {
+    const defaultPreventKeys = [
+      "ArrowLeft",
+      "ArrowRight",
+      "ArrowDown",
+      "ArrowUp",
+      " ",
+      "Enter"
+    ];
+
+    if (defaultPreventKeys.includes(eventKey)) {
+      return true;
+    }
+
+    return Object.values(keys).includes(eventKey);
+  }
+
+  document.addEventListener("keydown", event => {
+    if (shouldPreventDefault(event.key)) {
+      event.preventDefault();
+    }
+
+    if (!started) {
+      const tag = document.activeElement.tagName;
+
+      if (
+        tag !== "SELECT" &&
+        tag !== "INPUT" &&
+        tag !== "BUTTON" &&
+        tag !== "TEXTAREA"
+      ) {
+        window.openModeSetup();
+      }
+
+      return;
+    }
+
+    if (gameOver) {
+      if (keyMatches(event.key, "restart")) {
+        window.startGame();
+      }
+
+      return;
+    }
+
+    if (
+      keyMatches(event.key, "pause") ||
+      event.key === "Escape"
+    ) {
+      pauseGame();
+      return;
+    }
+
+    if (keyMatches(event.key, "restart")) {
+      window.requestRestart();
+      return;
+    }
+
+    if (keyMatches(event.key, "music")) {
+      musicEnabled = !musicEnabled;
+      savePreferences();
+
+      if (musicEnabled) {
+        startMusic();
+      } else {
+        stopMusic(true);
+      }
+
+      return;
+    }
+
+    if (keyMatches(event.key, "sfx")) {
+      sfxEnabled = !sfxEnabled;
+      savePreferences();
+      return;
+    }
+
+    if (keyMatches(event.key, "ghost")) {
+      ghostEnabled = !ghostEnabled;
+      savePreferences();
+      return;
+    }
+
+    if (keyMatches(event.key, "zenClear")) {
+      clearZenBoard();
+      return;
+    }
+
+    if (paused) {
+      return;
+    }
+
+    if (keyMatches(event.key, "left")) {
+      if (!moveLeftHeld) {
+        moveLeftHeld = true;
+        leftDasTimer = 0;
+        leftArrTimer = 0;
+        moveHorizontal(-1);
+      }
+
+      return;
+    }
+
+    if (keyMatches(event.key, "right")) {
+      if (!moveRightHeld) {
+        moveRightHeld = true;
+        rightDasTimer = 0;
+        rightArrTimer = 0;
+        moveHorizontal(1);
+      }
+
+      return;
+    }
+
+    if (keyMatches(event.key, "softDrop")) {
+      if (!softDropHeld) {
+        softDropHeld = true;
+        softDropHoldTimer = 0;
+        softDropRepeatTimer = 0;
+        softDrop(true);
+      }
+
+      return;
+    }
+
+    if (
+      keyMatches(event.key, "rotateCw") ||
+      keyMatches(event.key, "rotateCwAlt")
+    ) {
+      rotatePiece(1);
+      return;
+    }
+
+    if (keyMatches(event.key, "rotateCcw")) {
+      rotatePiece(-1);
+      return;
+    }
+
+    if (
+      keyMatches(event.key, "hardDrop") ||
+      keyMatches(event.key, "hardDropAlt")
+    ) {
+      hardDrop();
+      return;
+    }
+
+    if (keyMatches(event.key, "hold")) {
+      holdPiece();
+    }
+  });
+
+  document.addEventListener("keyup", event => {
+    if (keyMatches(event.key, "left")) {
+      moveLeftHeld = false;
+    }
+
+    if (keyMatches(event.key, "right")) {
+      moveRightHeld = false;
+    }
+
+    if (keyMatches(event.key, "softDrop")) {
+      softDropHeld = false;
+    }
+  });
+
+  /* ==========================================================================
+     TOUCH / MOBILE INPUT
+     ========================================================================== */
+
+  let pointerTracking = false;
+  let pointerStartX = 0;
+  let pointerStartY = 0;
+  let pointerStartTime = 0;
+  let lastBoardTouchTime = 0;
+  let lastBoardTapTime = 0;
+
+  function isMobileLikeInput(event) {
+    if (!event || !event.pointerType) {
+      return true;
+    }
+
+    return event.pointerType !== "mouse";
+  }
+
+  function handleBoardGesture(endX, endY) {
+    const dx = endX - pointerStartX;
+    const dy = endY - pointerStartY;
+    const elapsed = performance.now() - pointerStartTime;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+
+    if (absX < 22 && absY < 22) {
+      const now = performance.now();
+
+      if (now - lastBoardTapTime < 280) {
+        lastBoardTapTime = 0;
+        holdPiece();
+      } else {
+        lastBoardTapTime = now;
+        rotatePiece(1);
+      }
+
+      return;
+    }
+
+    if (absX > absY) {
+      moveHorizontal(dx > 0 ? 1 : -1);
+      return;
+    }
+
+    if (dy > 0) {
+      if (dy > 96 && elapsed < 240) {
+        hardDrop();
+      } else {
+        softDrop(true);
+      }
+    }
+  }
+
+  boardCanvas.addEventListener(
+    "pointerdown",
+    event => {
+      if (!isMobileLikeInput(event)) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (performance.now() - lastBoardTouchTime < 40) {
+        return;
+      }
+
+      pointerTracking = true;
+      pointerStartX = event.clientX;
+      pointerStartY = event.clientY;
+      pointerStartTime = performance.now();
+
+      try {
+        boardCanvas.setPointerCapture(event.pointerId);
+      } catch (error) {
+        /* ignored */
+      }
+    },
+    { passive: false }
+  );
+
+  boardCanvas.addEventListener(
+    "pointerup",
+    event => {
+      if (!isMobileLikeInput(event)) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (!pointerTracking) {
+        return;
+      }
+
+      pointerTracking = false;
+      lastBoardTouchTime = performance.now();
+
+      handleBoardGesture(event.clientX, event.clientY);
+    },
+    { passive: false }
+  );
+
+  boardCanvas.addEventListener(
+    "pointercancel",
+    event => {
+      if (!isMobileLikeInput(event)) {
+        return;
+      }
+
+      event.preventDefault();
+      pointerTracking = false;
+    },
+    { passive: false }
+  );
+
+  boardCanvas.addEventListener(
+    "touchstart",
+    event => {
+      event.preventDefault();
+
+      const touch = event.changedTouches[0];
+
+      pointerTracking = true;
+      pointerStartX = touch.clientX;
+      pointerStartY = touch.clientY;
+      pointerStartTime = performance.now();
+    },
+    { passive: false }
+  );
+
+  boardCanvas.addEventListener(
+    "touchend",
+    event => {
+      event.preventDefault();
+
+      if (!pointerTracking) {
+        return;
+      }
+
+      if (performance.now() - lastBoardTouchTime < 40) {
+        pointerTracking = false;
+        return;
+      }
+
+      pointerTracking = false;
+      lastBoardTouchTime = performance.now();
+
+      const touch = event.changedTouches[0];
+      handleBoardGesture(touch.clientX, touch.clientY);
+    },
+    { passive: false }
+  );
+
+  boardCanvas.addEventListener(
+    "touchcancel",
+    event => {
+      event.preventDefault();
+      pointerTracking = false;
+    },
+    { passive: false }
+  );
+
+  const mobileMenuButton = $("mobileMenu");
+
+  if (mobileMenuButton) {
+    mobileMenuButton.addEventListener(
+      "click",
+      event => {
+        event.preventDefault();
+        window.mobileQuickMenu();
+      },
+      { passive: false }
+    );
+  }
+
+  let touchRepeatTimer = null;
+
+  function stopTouchRepeat() {
+    if (touchRepeatTimer) {
+      clearInterval(touchRepeatTimer);
+      touchRepeatTimer = null;
+    }
+  }
+
+  function startTouchRepeat(action) {
+    if (!action) {
+      return;
+    }
+
+    stopTouchRepeat();
+
+    performAction(action);
+    haptic(action === "hardDrop" ? "drop" : "tap");
+
+    const repeatableActions = ["left", "right", "softDrop"];
+
+    if (!repeatableActions.includes(action)) {
+      return;
+    }
+
+    const interval = action === "softDrop"
+      ? Math.max(1, Number(config.softDropRepeat) || 1)
+      : 80;
+
+    touchRepeatTimer = setInterval(() => {
+      performAction(action);
+    }, interval);
+  }
+
+  const mobileActionMap = {
+    l: "left",
+    r: "right",
+    d: "softDrop",
+    cw: "rotateCw",
+    ccw: "rotateCcw",
+    hd: "hardDrop",
+    h: "hold"
+  };
+
+  document.querySelectorAll("#mobile button").forEach(button => {
+    const rawAction = button.dataset.act;
+    const action = mobileActionMap[rawAction];
+
+    if (!action) {
+      return;
+    }
+
+    const startEventName = window.PointerEvent ? "pointerdown" : "touchstart";
+    const endEventName = window.PointerEvent ? "pointerup" : "touchend";
+    const cancelEventName = window.PointerEvent ? "pointercancel" : "touchcancel";
+
+    button.addEventListener(
+      startEventName,
+      event => {
+        event.preventDefault();
+        startTouchRepeat(action);
+      },
+      { passive: false }
+    );
+
+    button.addEventListener(
+      endEventName,
+      event => {
+        event.preventDefault();
+        stopTouchRepeat();
+      },
+      { passive: false }
+    );
+
+    button.addEventListener(
+      cancelEventName,
+      event => {
+        event.preventDefault();
+        stopTouchRepeat();
+      },
+      { passive: false }
+    );
+  });
+
+  document.addEventListener(
+    "touchmove",
+    event => {
+      const target = event.target;
+
+      if (
+        typeof Element !== "undefined" &&
+        target instanceof Element &&
+        (
+          target.closest("#mobile") ||
+          target.closest("#board") ||
+          target.closest("#wrap")
+        )
+      ) {
+        event.preventDefault();
+      }
+    },
+    { passive: false }
+  );
+
+  window.addEventListener("blur", stopTouchRepeat);
+  window.addEventListener("pagehide", stopTouchRepeat);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      stopTouchRepeat();
+    }
+  });
+
+  /* ==========================================================================
+     AUDIO
+     ========================================================================== */
+
+  function initAudio() {
+    if (!audioContext) {
+      const AudioContextClass =
+        window.AudioContext || window.webkitAudioContext;
+
+      if (!AudioContextClass) {
+        return;
+      }
+
+      audioContext = new AudioContextClass();
+    }
+
+    if (audioContext.state === "suspended") {
+      audioContext.resume();
+    }
+  }
+
+  function noteToFrequency(note) {
+    const semitoneMap = {
+      C: -9,
+      "C#": -8,
+      D: -7,
+      "D#": -6,
+      E: -5,
+      F: -4,
+      "F#": -3,
+      G: -2,
+      "G#": -1,
+      A: 0,
+      "A#": 1,
+      B: 2
+    };
+
+    const match = note.match(/^([A-G]#?)(\d)$/);
+
+    if (!match) {
+      return 0;
+    }
+
+    const noteName = match[1];
+    const octave = Number(match[2]);
+
+    return 440 * Math.pow(
+      2,
+      (semitoneMap[noteName] + (octave - 4) * 12) / 12
+    );
+  }
+
+  function stopAllTones() {
+    for (const oscillator of activeOscillators) {
+      try {
+        oscillator.stop();
+      } catch (error) {
+        /* oscillator may already be stopped */
+      }
+    }
+
+    activeOscillators = [];
+  }
+
+  function playTone(
+    frequency,
+    startTimeValue,
+    duration,
+    type = "square",
+    volume = 0.04
+  ) {
+    if (!audioContext) {
+      return;
+    }
+
+    if (audioContext.state !== "running") {
+      return;
+    }
+
+    if (!frequency) {
+      return;
+    }
+
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = type;
+    oscillator.frequency.value = frequency;
+
+    gain.gain.setValueAtTime(0, startTimeValue);
+    gain.gain.linearRampToValueAtTime(volume, startTimeValue + 0.01);
+    gain.gain.setValueAtTime(volume, startTimeValue + duration * 0.85);
+    gain.gain.linearRampToValueAtTime(0, startTimeValue + duration);
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscillator.onended = () => {
+      activeOscillators = activeOscillators.filter(item => item !== oscillator);
+    };
+
+    activeOscillators.push(oscillator);
+
+    oscillator.start(startTimeValue);
+    oscillator.stop(startTimeValue + duration + 0.03);
+  }
+
+  function haptic(name) {
+    if (!navigator.vibrate) {
+      return;
+    }
+
+    const patterns = {
+      tap: 8,
+      move: 6,
+      rotate: 8,
+      drop: 22,
+      hold: 12,
+      clear: [18, 35, 18],
+      garbage: [24, 40, 24],
+      game: [40, 50, 80]
+    };
+
+    try {
+      navigator.vibrate(patterns[name] || 8);
+    } catch (error) {
+      /* ignored */
+    }
+  }
+
+  function playSfx(name) {
+    haptic(name);
+
+    if (!sfxEnabled) {
+      return;
+    }
+
+    initAudio();
+
+    if (!audioContext) {
+      return;
+    }
+
+    const now = audioContext.currentTime;
+    const sfxVol = config.sfxVolume;
+
+    if (name === "move") {
+      playTone(180, now, 0.03, "square", 0.04 * sfxVol);
+      return;
+    }
+
+    if (name === "rotate") {
+      playTone(260, now, 0.04, "square", 0.04 * sfxVol);
+      return;
+    }
+
+    if (name === "drop") {
+      playTone(90, now, 0.06, "square", 0.05 * sfxVol);
+      return;
+    }
+
+    if (name === "hold") {
+      playTone(330, now, 0.05, "triangle", 0.04 * sfxVol);
+      return;
+    }
+
+    if (name === "clear") {
+      playTone(523, now, 0.07, "square", 0.04 * sfxVol);
+      playTone(659, now + 0.07, 0.07, "square", 0.04 * sfxVol);
+      playTone(784, now + 0.14, 0.12, "square", 0.04 * sfxVol);
+      return;
+    }
+
+    if (name === "garbage") {
+      playTone(110, now, 0.05, "sawtooth", 0.03 * sfxVol);
+      playTone(82, now + 0.06, 0.07, "sawtooth", 0.03 * sfxVol);
+      return;
+    }
+
+    if (name === "game") {
+      playTone(330, now, 0.16, "square", 0.04 * sfxVol);
+      playTone(247, now + 0.16, 0.16, "square", 0.04 * sfxVol);
+      playTone(196, now + 0.32, 0.25, "square", 0.04 * sfxVol);
+    }
+  }
+
+  const MUSIC_MELODY = [
+    ["E5", 1], ["B4", 0.5], ["C5", 0.5], ["D5", 1],
+    ["C5", 0.5], ["B4", 0.5], ["A4", 1], ["A4", 0.5],
+    ["C5", 0.5], ["E5", 1], ["D5", 0.5], ["C5", 0.5],
+    ["B4", 1], ["C5", 0.5], ["D5", 1], ["E5", 1],
+    ["C5", 1], ["A4", 1], ["A4", 1],
+
+    ["D5", 1], ["F5", 0.5], ["A5", 1], ["G5", 0.5],
+    ["F5", 0.5], ["E5", 1], ["C5", 0.5], ["E5", 1],
+    ["D5", 0.5], ["C5", 0.5], ["B4", 1], ["B4", 0.5],
+    ["C5", 0.5], ["D5", 1], ["E5", 1], ["C5", 1],
+    ["A4", 1], ["A4", 1]
+  ];
+
+  function scheduleMusic(generation) {
+    if (generation !== musicGeneration) {
+      return;
+    }
+
+    if (!audioContext || !musicEnabled || paused || gameOver || !started) {
+      return;
+    }
+
+    const beatsPerMinute = Math.min(176, 132 + (level - 1) * 2);
+    const beatLength = 60 / beatsPerMinute;
+
+    let time = audioContext.currentTime + 0.05;
+
+    for (const [note, length] of MUSIC_MELODY) {
+      if (generation !== musicGeneration) {
+        return;
+      }
+
+      playTone(
+        noteToFrequency(note),
+        time,
+        beatLength * length * 0.92,
+        "square",
+        0.035 * config.musicVolume
+      );
+
+      const bassNote = note.replace(/\d/, digit => {
+        return Math.max(2, Number(digit) - 2);
+      });
+
+      playTone(
+        noteToFrequency(bassNote),
+        time,
+        beatLength * length * 0.9,
+        "triangle",
+        0.018 * config.musicVolume
+      );
+
+      time += beatLength * length;
+    }
+
+    const delay = Math.max(
+      100,
+      (time - audioContext.currentTime - 0.1) * 1000
+    );
+
+    musicTimer = setTimeout(() => {
+      scheduleMusic(generation);
+    }, delay);
+  }
+
+  function startMusic() {
+    initAudio();
+    stopMusic(true);
+
+    musicGeneration++;
+    scheduleMusic(musicGeneration);
+  }
+
+  function stopMusic(stopScheduledTones = false) {
+    musicGeneration++;
+
+    if (musicTimer) {
+      clearTimeout(musicTimer);
+    }
+
+    musicTimer = null;
+
+    if (stopScheduledTones) {
+      stopAllTones();
+    }
+  }
+
+  /* ==========================================================================
+     INITIALIZATION
+     ========================================================================== */
+
+  board = createEmptyBoard();
+  queue = [];
+
+  refillSevenBag();
+  refillSevenBag();
+
+  applyAccessibilitySettings();
+  window.menu();
+  updateUi();
+
+  requestAnimationFrame(gameLoop);
+
+})();
+</script>
+
+<script>
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
