@@ -1,4 +1,4 @@
-const CACHE_NAME = "tetris-deluxe-v1";
+const CACHE_NAME = "tetris-deluxe-v3-no-overlay";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", event => {
@@ -11,9 +11,19 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
-  event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
+  const request = event.request;
+  const isHtml = request.mode === "navigate" || request.destination === "document";
+  if (isHtml) {
+    event.respondWith(fetch(request).then(response => {
+      const copy = response.clone();
+      caches.open(CACHE_NAME).then(cache => cache.put("./index.html", copy));
+      return response;
+    }).catch(() => caches.match("./index.html")));
+    return;
+  }
+  event.respondWith(caches.match(request).then(cached => cached || fetch(request).then(response => {
     const copy = response.clone();
-    caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+    caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
     return response;
-  }).catch(() => caches.match("./index.html"))));
+  })));
 });
