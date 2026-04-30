@@ -1118,6 +1118,262 @@ pre {
   }
 }
 
+
+
+/* ==========================================================================
+   FINAL MOBILE SAFARI / PWA LAYOUT PATCH
+   ========================================================================== */
+
+:root {
+  --mobile-browser-reserve: 0px;
+}
+
+/* In normal Safari/Chrome browser mode, keep a little breathing room above
+   browser chrome. In installed standalone mode, use the full viewport. */
+:root:not(.standalone-app) {
+  --mobile-browser-reserve: 10px;
+}
+
+@media (max-width: 880px) and (orientation: portrait),
+       (max-width: 1180px) and (pointer: coarse) and (orientation: portrait) {
+  html,
+  body {
+    width: 100% !important;
+    height: var(--app-height, 100dvh) !important;
+    overflow: hidden !important;
+    position: fixed !important;
+    inset: 0 !important;
+  }
+
+  body {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 0 0 var(--mobile-browser-reserve) 0 !important;
+    margin: 0 !important;
+    gap: 0 !important;
+  }
+
+  #wrap {
+    width: 100vw !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto auto !important;
+    justify-items: center !important;
+    align-items: start !important;
+    gap: 4px !important;
+    padding:
+      calc(4px + env(safe-area-inset-top))
+      8px
+      0
+      8px !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+    flex: 0 0 auto !important;
+  }
+
+  #wrap .panel:first-child {
+    order: 1 !important;
+    justify-self: start !important;
+    width: min(500px, calc(100vw - 92px)) !important;
+    margin-left: 6px !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0 7px !important;
+    padding: 6px 8px !important;
+  }
+
+  #wrap .panel:first-child > div:nth-child(6),
+  #wrap .panel:first-child > div:nth-child(7) {
+    display: none !important;
+  }
+
+  #wrap .panel:first-child .label {
+    font-size: 10px !important;
+    line-height: 1 !important;
+    margin-top: 0 !important;
+  }
+
+  #wrap .panel:first-child .value {
+    font-size: 15px !important;
+    line-height: 1.1 !important;
+    min-height: 17px !important;
+    margin-bottom: 2px !important;
+  }
+
+  #mobileMenu {
+    display: block !important;
+    position: fixed !important;
+    width: 50px !important;
+    height: 50px !important;
+    min-width: 50px !important;
+    top: calc(6px + env(safe-area-inset-top)) !important;
+    right: calc(8px + env(safe-area-inset-right)) !important;
+    z-index: 20 !important;
+    font-size: 22px !important;
+  }
+
+  #mobileInfo {
+    order: 2 !important;
+    width: min(500px, calc(100vw - 16px)) !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    display: grid !important;
+    grid-template-columns: 1.12fr 1.12fr 0.72fr 0.72fr 0.9fr 0.88fr !important;
+    align-items: center !important;
+    gap: 2px 3px !important;
+    padding: 2px 5px !important;
+    border: 2px solid var(--fg) !important;
+    background: rgba(0, 0, 0, 0.96) !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  #mobileInfo > .mobile-stat:nth-child(-n + 4) {
+    display: none !important;
+  }
+
+  #mobileInfo .mobile-mini-wide {
+    grid-column: span 1 !important;
+  }
+
+  #mobileInfo .label {
+    font-size: 7px !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+  }
+
+  #mobileInfo .value {
+    font-size: 10px !important;
+    line-height: 1 !important;
+    min-height: 10px !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+  }
+
+  #mobileMode {
+    font-size: 9px !important;
+  }
+
+  .mobile-mini-canvas {
+    display: block !important;
+    width: 36px !important;
+    height: 17px !important;
+    margin: 0 auto !important;
+  }
+
+  #board {
+    order: 3 !important;
+    --mobile-board-width: min(
+      320px,
+      calc(100vw - 20px),
+      calc((var(--app-height, 100dvh) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--mobile-controls-height) - var(--mobile-browser-reserve) - 136px) / 2)
+    ) !important;
+    width: var(--mobile-board-width) !important;
+    height: calc(var(--mobile-board-width) * 2) !important;
+    max-width: none !important;
+    max-height: none !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    aspect-ratio: auto !important;
+    align-self: start !important;
+  }
+
+  #wrap .panel:last-child {
+    display: none !important;
+  }
+
+  #mobile {
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 100vw !important;
+    height: calc(var(--mobile-controls-height) + env(safe-area-inset-bottom)) !important;
+    min-height: calc(var(--mobile-controls-height) + env(safe-area-inset-bottom)) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    padding:
+      6px
+      max(14px, env(safe-area-inset-left))
+      calc(6px + env(safe-area-inset-bottom))
+      max(14px, env(safe-area-inset-right)) !important;
+    margin: 6px 0 0 0 !important;
+    background: rgba(0, 0, 0, 0.98) !important;
+    border-top: 2px solid rgba(255, 255, 255, 0.28) !important;
+    z-index: 10 !important;
+    box-sizing: border-box !important;
+    pointer-events: auto !important;
+    flex: 0 0 auto !important;
+  }
+
+  .mobile-zone {
+    gap: 8px !important;
+    pointer-events: auto !important;
+  }
+
+  .mobile-zone-left {
+    grid-template-columns: repeat(3, var(--mobile-button-size)) !important;
+  }
+
+  .mobile-zone-right {
+    grid-template-columns: repeat(2, var(--mobile-button-size)) !important;
+    grid-template-rows: repeat(2, var(--mobile-button-size)) !important;
+  }
+
+  #mobile button {
+    width: var(--mobile-button-size) !important;
+    height: var(--mobile-button-size) !important;
+    min-width: var(--mobile-button-size) !important;
+    font-size: var(--mobile-button-font) !important;
+  }
+}
+
+@media (max-width: 390px) and (orientation: portrait),
+       (max-height: 780px) and (orientation: portrait) {
+  :root {
+    --mobile-controls-height: 80px;
+    --mobile-button-size: 35px;
+    --mobile-button-font: 14px;
+  }
+
+  #mobileInfo {
+    height: 31px !important;
+    min-height: 31px !important;
+  }
+
+  .mobile-mini-canvas {
+    width: 32px !important;
+    height: 15px !important;
+  }
+
+  #board {
+    --mobile-board-width: min(
+      300px,
+      calc(100vw - 20px),
+      calc((var(--app-height, 100dvh) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--mobile-controls-height) - var(--mobile-browser-reserve) - 126px) / 2)
+    ) !important;
+  }
+}
+
+@media (orientation: portrait) {
+  .standalone-app {
+    --mobile-browser-reserve: 0px;
+  }
+}
+
 </style>
 </head>
 
@@ -1300,6 +1556,8 @@ pre {
 
   if (isStandaloneApp) {
     document.documentElement.classList.add("standalone-app");
+  } else {
+    document.documentElement.classList.add("browser-app");
   }
 
   let lastTouchEndTime = 0;
@@ -1317,6 +1575,13 @@ pre {
     },
     { passive: false }
   );
+
+
+
+
+  document.addEventListener("pointerdown", warmAudioFromGesture, { passive: true });
+  document.addEventListener("touchstart", warmAudioFromGesture, { passive: true });
+  document.addEventListener("keydown", warmAudioFromGesture, { passive: true });
 
 
   /* ==========================================================================
@@ -3352,7 +3617,9 @@ pre {
     }
 
     if ($("mobileMode")) {
-      $("mobileMode").textContent = $("modeName").textContent;
+      $("mobileMode").textContent = mode === "garbage"
+        ? "GARBAGE"
+        : mode.toUpperCase();
     }
 
     const comboDisplay = Math.max(0, combo);
@@ -3394,7 +3661,9 @@ pre {
     $("garbage").textContent = garbageDisplay;
 
     if ($("mobileGarbage")) {
-      $("mobileGarbage").textContent = garbageDisplay;
+      $("mobileGarbage").textContent = mode === "garbage"
+        ? garbagePending + "/" + config.garbageMaxPending
+        : "-";
     }
 
     if (messageTimer > 0) {
@@ -5713,14 +5982,44 @@ pre {
         window.AudioContext || window.webkitAudioContext;
 
       if (!AudioContextClass) {
-        return;
+        return null;
       }
 
       audioContext = new AudioContextClass();
     }
 
     if (audioContext.state === "suspended") {
-      audioContext.resume();
+      try {
+        return audioContext.resume();
+      } catch (error) {
+        return null;
+      }
+    }
+
+    return Promise.resolve();
+  }
+
+  function warmAudioFromGesture() {
+    const resumePromise = initAudio();
+
+    if (
+      musicEnabled &&
+      started &&
+      !paused &&
+      !gameOver &&
+      audioContext
+    ) {
+      if (audioContext.state === "running") {
+        if (!musicTimer) {
+          startMusic();
+        }
+      } else if (resumePromise && typeof resumePromise.then === "function") {
+        resumePromise.then(() => {
+          if (musicEnabled && started && !paused && !gameOver && !musicTimer) {
+            startMusic();
+          }
+        }).catch(() => {});
+      }
     }
   }
 
@@ -5956,11 +6255,38 @@ pre {
   }
 
   function startMusic() {
-    initAudio();
+    const resumePromise = initAudio();
+
     stopMusic(true);
 
     musicGeneration++;
-    scheduleMusic(musicGeneration);
+    const generation = musicGeneration;
+    let scheduled = false;
+
+    function scheduleWhenReady() {
+      if (scheduled || generation !== musicGeneration) {
+        return;
+      }
+
+      if (!audioContext || audioContext.state !== "running") {
+        return;
+      }
+
+      scheduled = true;
+      scheduleMusic(generation);
+    }
+
+    if (audioContext && audioContext.state === "running") {
+      scheduleWhenReady();
+      return;
+    }
+
+    if (resumePromise && typeof resumePromise.then === "function") {
+      resumePromise.then(scheduleWhenReady).catch(() => {});
+    }
+
+    setTimeout(scheduleWhenReady, 80);
+    setTimeout(scheduleWhenReady, 220);
   }
 
   function stopMusic(stopScheduledTones = false) {
